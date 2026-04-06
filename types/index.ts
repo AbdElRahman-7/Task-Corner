@@ -10,6 +10,8 @@ export interface Task {
   checklist: { id: string; text: string; done: boolean }[];
   progress: number; 
   status: "todo" | "in progress" | "done" | string;
+  autoDone?: boolean;
+  createdAt: number;
 }
 export interface List {
   id: string;
