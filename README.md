@@ -1,5 +1,23 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+---
+
+##  Tech Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS (v4)
+- Redux Toolkit
+- React Redux
+- @dnd-kit (Drag & Drop)
+- Formik + Yup (Forms & Validation)
+- React Hot Toast (Notifications)
+- Lucide React (Icons)
+- Date-fns (Date handling)
+- UUID (Unique IDs)
+
+---
+
 ## Getting Started
 
 First, run the development server:
