@@ -1,26 +1,31 @@
 @import "tailwindcss";
-
+/* Variables */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+body {
+  @apply bg-emerald-300 text-black transition-colors duration-300;
+}
+
+/* Dark mode */
+html.dark body {
+  @apply bg-gray-900 text-cyan-300;
+}
+
+/* مثال على component */
+.task {
+  @apply bg-emerald-300 dark:bg-gray-800 p-2 rounded shadow mb-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors;
 }
