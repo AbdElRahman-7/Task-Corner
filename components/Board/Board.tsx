@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import List from "@components/List/List";
 import { type Board as BoardType } from "../../types/index";
 
 interface BoardProps {

@@ -10,11 +10,15 @@ export default function Home() {
   const dispatch = useDispatch();
 
   const handleAddBoard = () => {
-    const title = prompt("Enter board title");
-    if (title) {
-      const id = crypto.randomUUID();
-      dispatch(addBoard({ id, title }));
+    const title = prompt("Enter board title")?.trim();
+    if (!title) {
+      if (title !== undefined && title !== null) {
+        alert("Board title is required. Please enter a title.");
+      }
+      return;
     }
+    const id = crypto.randomUUID();
+    dispatch(addBoard({ id, title }));
   };
 
   return (
