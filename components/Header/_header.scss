@@ -1,0 +1,156 @@
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
+@use '../../styles/animations' as *;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 4rem;
+  background: $light-surface;
+  border-bottom: 2px solid $light-border;
+  box-shadow: 
+    0 1px 0 rgba(0,0,0,0.05),
+    0 2px 0 rgba(0,0,0,0.05),
+    0 3px 0 rgba(0,0,0,0.05),
+    0 10px 30px rgba(0, 0, 0, 0.03),
+    $highlight-3d;
+
+  transition: all $transition-bounce;
+
+  @include dark {
+    background: $dark-surface;
+    border-color: rgba(255,255,255,0.05);
+    box-shadow: 
+      0 1px 0 rgba(0,0,0,0.2),
+      0 2px 0 rgba(0,0,0,0.2),
+      0 10px 40px rgba(0, 0, 0, 0.5),
+      $highlight-3d-dark;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    transition: transform $transition-bounce;
+
+    &:hover { 
+      animation: logo-float 2s $ease-bounce infinite;
+    }
+
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, $brand-primary, $brand-secondary);
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: $glow-primary;
+    will-change: transform;
+    padding: 10px;
+
+    svg { 
+      width: 100%; 
+      height: 100%;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 950;
+    letter-spacing: -0.07em;
+    color: $light-text-primary;
+    line-height: 1;
+
+    @include tablet { font-size: 1.6rem; }
+    @include mobile { font-size: 1.35rem; }
+
+    @include dark { color: $dark-text-primary; }
+
+    span { 
+      color: $light-accent; 
+      margin-left: -0.05em;
+      background: linear-gradient(135deg, $light-accent, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+  }
+
+  &__left {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  &__center {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    @include mobile { width: 100%; }
+  }
+
+  &__right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    @include mobile { position: absolute; top: 1rem; right: 1rem; }
+  }
+}
+
+.themeToggle {
+  position: relative;
+  width: 72px;
+  height: 38px;
+  background: rgba($brand-primary, 0.08);
+  border: 1px solid $light-border;
+  border-radius: $radius-full;
+  cursor: pointer;
+  padding: 5px;
+  transition: all $transition-bounce;
+  box-shadow: $shadow-inner;
+
+  @include dark {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: $glass-border-dark;
+  }
+
+  &:hover {
+    border-color: $light-accent;
+    transform: scale(1.08);
+    box-shadow: 0 0 25px rgba($light-accent, 0.2);
+  }
+
+
+  &__knob {
+    width: 28px;
+    height: 28px;
+    background: $light-surface;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: $shadow-md;
+    transition: transform $transition-bounce;
+
+    &--dark {
+      transform: translateX(34px) rotate(360deg);
+      background: $dark-bg;
+      color: #fbbf24; 
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+  }
+}

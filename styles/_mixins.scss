@@ -1,0 +1,227 @@
+@use 'variables' as *;
+
+$mobile: 640px;
+$tablet: 768px;
+$laptop: 1024px;
+$desktop: 1280px;
+
+@mixin mobile {
+  @media (max-width: #{$mobile}) { @content; }
+}
+
+@mixin tablet {
+  @media (max-width: #{$tablet}) { @content; }
+}
+
+@mixin laptop {
+  @media (max-width: #{$laptop}) { @content; }
+}
+
+@mixin desktop {
+  @media (max-width: #{$desktop}) { @content; }
+}
+
+@mixin dark {
+  html.dark &,
+  .dark & {
+    @content;
+  }
+}
+
+@mixin dark-root {
+  html.dark,
+  .dark {
+    @content;
+  }
+}
+
+@mixin glass-light {
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  -webkit-backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border;
+  box-shadow: $shadow-sm;
+}
+
+@mixin glass-dark {
+  background: $glass-bg-dark;
+  backdrop-filter: $glass-blur;
+  -webkit-backdrop-filter: $glass-blur;
+  border: 1px solid $glass-border-dark;
+  box-shadow: $glow-primary;
+}
+
+@mixin input-base {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: $radius-md;
+  border: 2px solid $light-border-hover;
+  color: $light-text-primary;
+  font-family: $font-sans;
+  font-size: 0.95rem;
+  transition: all $transition-base;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+
+  &::placeholder { color: $light-text-muted; }
+
+  background: $light-surface;
+
+  &:focus {
+    border-color: $brand-primary;
+    box-shadow: 0 0 0 4px rgba($brand-primary, 0.1);
+    transform: translateY(-1px);
+    background: $light-surface;
+  }
+
+  @include dark {
+    background: $dark-surface-2;
+    border-color: $dark-border-hover;
+    color: $dark-text-primary;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.4);
+
+    &::placeholder { color: $dark-text-muted; }
+
+    &:focus {
+      background: $dark-surface-3;
+      border-color: $brand-primary;
+      box-shadow: 0 0 0 4px rgba($brand-primary, 0.2);
+    }
+  }
+}
+
+@mixin select-base {
+  @include input-base;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+  appearance: none;
+}
+
+@mixin btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: $brand-primary;
+  color: #fff;
+  border: none;
+  border-radius: $radius-lg;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all $transition-base;
+  box-shadow: 
+    0 1px 0 rgba(0,0,0,0.1),
+    0 2px 0 rgba(0,0,0,0.1),
+    0 3px 0 rgba(0,0,0,0.1),
+    0 8px 16px rgba($brand-primary, 0.25);
+
+  &:hover {
+    background: $brand-primary-hover;
+    transform: translateY(-2px);
+    box-shadow: 
+      0 1px 0 rgba(0,0,0,0.1),
+      0 2px 0 rgba(0,0,0,0.1),
+      0 3px 0 rgba(0,0,0,0.1),
+      0 4px 0 rgba(0,0,0,0.1),
+      0 12px 24px rgba($brand-primary, 0.3);
+  }
+
+  &:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+@mixin btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: $light-text-secondary;
+  border: 2px solid $light-border-hover;
+  border-radius: $radius-lg;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    background: $light-surface-2;
+    border-color: $brand-primary;
+    color: $brand-primary;
+    transform: translateY(-2px);
+  }
+
+  @include dark {
+    color: $dark-text-secondary;
+    border-color: $dark-border-hover;
+
+    &:hover {
+      background: $dark-surface-2;
+      border-color: $brand-primary;
+      color: $dark-text-primary;
+    }
+  }
+}
+
+@mixin three-d-lift {
+  box-shadow: $shadow-3d;
+  border: 1px solid $light-border;
+  box-shadow: $shadow-3d, $highlight-3d;
+  transition: all $transition-bounce;
+  
+  @include dark {
+    background-color: $dark-surface;
+    border-color: $dark-border;
+    box-shadow: $shadow-dark, $highlight-3d-dark;
+  }
+
+  &:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: $shadow-3d-hover, $highlight-3d;
+    @include dark {
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), $highlight-3d-dark;
+    }
+  }
+
+  &:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: $shadow-sm, $highlight-3d;
+    transition: all $transition-fast;
+    @include dark {
+       box-shadow: $shadow-inner, $highlight-3d-dark;
+    }
+  }
+}
+
+@mixin tactile-3d {
+  position: relative;
+  background: $light-surface;
+  border-radius: $radius-lg;
+  border: 1px solid $light-border;
+  box-shadow: 
+    0 1px 0 rgba(0,0,0,0.05),
+    0 2px 0 rgba(0,0,0,0.05),
+    0 3px 0 rgba(0,0,0,0.05),
+    0 4px 0 rgba(0,0,0,0.05),
+    0 10px 20px rgba(0,0,0,0.1);
+  
+  @include dark {
+    background: $dark-surface-2;
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: 
+      0 1px 0 rgba(0,0,0,0.2),
+      0 2px 0 rgba(0,0,0,0.2),
+      0 3px 0 rgba(0,0,0,0.2),
+      0 20px 40px rgba(0,0,0,0.4);
+  }
+}

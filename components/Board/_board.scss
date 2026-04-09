@@ -1,0 +1,234 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+@use "../../styles/animations" as *;
+
+.boardPage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 80% 20%,
+      rgba($brand-secondary, 0.08),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba($brand-primary, 0.04),
+      transparent 40%
+    ),
+    $light-bg;
+  background-size: 200% 200%;
+  animation: bg-motion 20s linear infinite;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% -50%, rgba($light-accent, 0.05), transparent 70%);
+    z-index: 1;
+  }
+
+
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: 
+      linear-gradient(rgba($brand-primary, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba($brand-primary, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  @include dark {
+    background:
+      radial-gradient(
+        circle at top right,
+        rgba($brand-secondary, 0.15),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at bottom left,
+        rgba($brand-primary, 0.15),
+        transparent 40%
+      ),
+      $dark-bg;
+  }
+
+}
+
+.boardHeader {
+  padding: 2rem 4rem 1.5rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  background: $light-surface;
+  box-shadow: 
+    0 1px 0 rgba(0,0,0,0.05),
+    0 2px 0 rgba(0,0,0,0.05),
+    $highlight-3d;
+  transition: all $transition-base;
+
+  @include dark {
+    background: $dark-bg;
+    box-shadow: 
+      0 1px 0 rgba(255,255,255,0.05),
+      $highlight-3d-dark;
+  }
+
+  @include tablet {
+    padding: 1.5rem 2rem 1rem;
+  }
+}
+
+.backLink {
+  @include btn-ghost;
+  display: inline-flex;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  border-radius: $radius-lg;
+  margin-bottom: 2rem;
+  border: 1px solid $light-border;
+  box-shadow: 
+    0 1px 0 rgba(0,0,0,0.1),
+    0 2px 0 rgba(0,0,0,0.1);
+  transition: all $transition-bounce;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  &:hover {
+    background: $brand-primary;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 
+      0 1px 0 rgba(0,0,0,0.1),
+      0 4px 12px rgba($brand-primary, 0.3);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+}
+
+.boardTitle {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  color: $light-text-primary;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+
+  @include dark {
+    color: $dark-text-primary;
+  }
+}
+
+.boardContent {
+  flex: 1;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  padding: 3rem 4rem 3rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+
+  @include tablet {
+    gap: 1.25rem;
+    padding: 1rem 1.5rem 1.5rem;
+  }
+}
+
+.addListPanel {
+  width: 330px;
+  flex-shrink: 0;
+  padding: 2.5rem;
+
+  @include mobile {
+    width: 280px;
+    padding: 1.8rem;
+  }
+  border: 2px dashed $brand-primary;
+  border-radius: $radius-xl;
+  background: rgba($brand-primary, 0.02);
+  backdrop-filter: $glass-blur;
+  transition: all $transition-bounce;
+  animation: springIn 0.8s $ease-bounce both;
+
+  @include dark {
+    background: rgba($brand-primary, 0.05);
+    border-color: rgba($brand-primary, 0.4);
+  }
+
+  &:hover {
+    border-style: solid;
+    background: rgba($brand-primary, 0.05);
+    transform: translateY(-10px) scale(1.01);
+    box-shadow: $glow-primary;
+
+    @include dark {
+      background: rgba($brand-primary, 0.1);
+    }
+  }
+
+  &__input {
+    @include input-base;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    padding: 0.9rem 1.25rem;
+    background: $light-surface;
+    @include dark {
+      background: $dark-surface-2;
+    }
+  }
+
+  &__button {
+    @include btn-primary;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.notFound {
+  max-width: 500px;
+  margin: 8rem auto;
+  text-align: center;
+  padding: 4rem;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-premium;
+
+  @include mobile {
+    margin: 4rem 1rem;
+    padding: 2rem;
+  }
+
+  @include dark {
+    background: $dark-surface;
+    box-shadow: $shadow-dark;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 950;
+    letter-spacing: -0.05em;
+    margin-bottom: 2rem;
+  }
+  a {
+    @include btn-primary;
+    padding: 1.1rem 2.5rem;
+  }
+}

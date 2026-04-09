@@ -1,38 +1,37 @@
 "use client";
-import "./globals.css";
-import { useEffect, useState } from "react";
+
+import "./globals.scss";
 import { Provider } from "react-redux";
 import { store } from "../store";
+import { Toaster } from "react-hot-toast";
+import Header from "@components/Header/Header";
+import { ThemeProvider } from "@components/ThemeProvider/ThemeProvider";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const [darkMode, setDarkMode] = useState(() => {
-      if (typeof window !== "undefined") {
-        return localStorage.getItem("darkMode") === "true";
-      }
-      return false;
-    });
-
-    const toggleDarkMode = () => {
-      setDarkMode((prev) => {
-        localStorage.setItem("darkMode", (!prev).toString());
-        return !prev;
-      });
-    };
   return (
-    <html lang="en" className={darkMode ? "dark" : "light"}>
-      <body className="bg-amber-950 text-yellow-200 p-10">
+    <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <title>TaskCorner | Smart Kanban Board</title>
+      </head>
+
+      <body className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-100 transition-colors duration-300">
         <Provider store={store}>
-          <button
-            onClick={toggleDarkMode}
-            className="fixed top-4 right-4 px-3 py-2 bg-yellow-100 dark:bg-green-100 rounded shadow text-black"
-          >
-            {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-          {children}
+          <ThemeProvider>
+            <Toaster
+              position="bottom-right"
+              reverseOrder={false}
+              containerStyle={{ zIndex: 99999 }}
+            />
+            <Header />
+            <main>
+              {children}
+            </main>
+          </ThemeProvider>
         </Provider>
       </body>
     </html>

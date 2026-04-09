@@ -1,0 +1,267 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+@use "../../styles/animations" as *;
+
+.filtersCompact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: $radius-full;
+  background: rgba($brand-primary, 0.05);
+  border: 1px solid $light-border;
+  backdrop-filter: blur(20px);
+  transition: all $transition-bounce;
+
+
+  @include dark {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: $glass-border-dark;
+  }
+
+  &:focus-within {
+    border-color: $brand-primary;
+    box-shadow: $glow-primary;
+    background: rgba($brand-primary, 0.08);
+  }
+
+  @include tablet {
+    gap: 0.5rem;
+    padding: 0.35rem;
+  }
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.filterCompactInput {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  width: 180px;
+  color: $light-text-primary;
+  outline: none;
+  font-weight: 500;
+
+  &::placeholder { color: $light-text-muted; }
+  @include dark { color: $dark-text-primary; }
+
+  @include tablet { width: 140px; }
+}
+
+.filterCompactReset {
+  background: rgba($brand-primary, 0.1);
+  color: $brand-primary;
+  border: none;
+  border-radius: $radius-full;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all $transition-bounce;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &:hover {
+    background: $brand-primary;
+    color: white;
+    transform: scale(1.05);
+    box-shadow: $glow-primary;
+  }
+
+  &:active { transform: scale(0.95); }
+}
+
+.customSelect {
+  position: relative;
+  min-width: 160px;
+
+  @include tablet { min-width: 130px; }
+
+  &__trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: transparent;
+    border: none;
+    border-left: 1px solid $glass-border;
+    color: $light-text-secondary;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all $transition-base;
+    outline: none;
+
+    @include dark { 
+      color: $dark-text-secondary;
+      border-color: $glass-border-dark;
+    }
+
+    &:hover {
+      color: $brand-primary;
+    }
+
+    &--active {
+      color: $brand-primary;
+    }
+  }
+
+  &__value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px currentColor;
+  }
+
+  &__arrow {
+    width: 16px;
+    height: 16px;
+    transition: transform $transition-bounce;
+    opacity: 0.6;
+
+    &--open {
+      transform: rotate(180deg);
+      opacity: 1;
+    }
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 0;
+    width: 100%;
+    min-width: 200px;
+    background: $glass-bg;
+    backdrop-filter: blur(30px);
+    border: 1px solid $glass-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-premium;
+    z-index: 500;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    @include dark {
+      background: $glass-bg-dark;
+      border-color: $glass-border-dark;
+    }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: $light-text-secondary;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: $radius-md;
+    cursor: pointer;
+    text-align: left;
+    transition: all $transition-base;
+
+    @include dark { color: $dark-text-secondary; }
+
+    &:hover {
+      background: rgba($brand-primary, 0.1);
+      color: $brand-primary;
+      transform: translateX(4px);
+    }
+
+    &--selected {
+      background: $brand-primary;
+      color: white;
+      @include dark { color: white; }
+      
+      &:hover {
+        background: $brand-primary;
+        color: white;
+      }
+    }
+  }
+}
+
+.filterGroup .customSelect {
+  border: 2px solid $light-border-hover;
+  border-radius: $radius-md;
+
+  @include dark {
+    background: $dark-surface-2;
+    border-color: $dark-border-hover;
+  }
+
+  &__trigger {
+    border: none;
+    padding: 0.75rem 1rem;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  padding: 2.5rem;
+  border-radius: $radius-xl;
+  border: 1px solid $glass-border;
+  margin-bottom: 3rem;
+
+  @include dark {
+    background: $glass-bg-dark;
+    border-color: $glass-border-dark;
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filterLabel {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: $light-text-secondary;
+  @include dark { color: $dark-text-secondary; }
+}
+
+.filterInput {
+  @include input-base;
+  min-width: 180px;
+}
+
+.filterResetBtn {
+  margin-top: auto;
+  padding: 1rem 2rem;
+  background: $glass-bg;
+  border: 1px solid $glass-border;
+  border-radius: $radius-lg;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all $transition-bounce;
+
+  &:hover {
+    background: $brand-primary;
+    color: white;
+    box-shadow: $glow-primary;
+  }
+}
