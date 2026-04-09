@@ -21,6 +21,18 @@
 
   transition: all $transition-bounce;
 
+  @include laptop {
+    padding: 0.9rem 2rem;
+  }
+
+  @include tablet {
+    padding: 0.8rem 1.25rem;
+  }
+
+  @include mobile {
+    padding: 0.65rem 0.8rem;
+  }
+
   @include dark {
     background: $dark-surface;
     border-color: rgba(255,255,255,0.05);
@@ -62,6 +74,12 @@
       height: 100%;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
+
+    @include mobile {
+      width: 36px;
+      height: 36px;
+      padding: 8px;
+    }
   }
 
   &__title {
@@ -97,7 +115,11 @@
     flex: 2;
     display: flex;
     justify-content: center;
-    @include mobile { width: 100%; }
+    @include mobile {
+      width: 100%;
+      justify-content: flex-start;
+      margin-left: 0.5rem;
+    }
   }
 
   &__right {
@@ -105,7 +127,10 @@
     display: flex;
     justify-content: flex-end;
     gap: 1.5rem;
-    @include mobile { position: absolute; top: 1rem; right: 1rem; }
+    @include mobile {
+      position: static;
+      gap: 0.5rem;
+    }
   }
 }
 
@@ -152,5 +177,21 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
 
+  }
+
+  @include mobile {
+    width: 62px;
+    height: 34px;
+    padding: 4px;
+
+    &__knob {
+      width: 24px;
+      height: 24px;
+      font-size: 13px;
+
+      &--dark {
+        transform: translateX(28px) rotate(360deg);
+      }
+    }
   }
 }

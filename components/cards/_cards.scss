@@ -3,7 +3,7 @@
 @use "../../styles/animations" as *;
 
 .listCard {
-  width: 330px;
+  width: clamp(280px, 80vw, 330px);
   flex-shrink: 0;
   max-height: 100%;
   display: flex;
@@ -152,6 +152,35 @@
       background: $dark-surface-2;
       color: $dark-text-muted;
       border-color: $dark-border;
+    }
+  }
+
+  &__quickInput {
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+
+    @include mobile {
+      font-size: 0.8rem;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+  }
+
+  @include mobile {
+    width: min(85vw, 300px);
+
+    &__header {
+      padding: 1.1rem 1rem 1rem;
+    }
+
+    &__tasks {
+      padding: 0 1rem 1rem;
+      gap: 0.9rem;
+    }
+
+    &__footer {
+      padding: 0.5rem 1rem 1.2rem;
     }
   }
 }
@@ -361,6 +390,38 @@
     &:hover {
       transform: scale(1.1) translateY(-2px);
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  @include mobile {
+    padding: 1rem;
+
+    &__title {
+      font-size: 0.92rem;
+      margin-bottom: 0.7rem;
+      line-height: 1.3;
+    }
+
+    &__meta {
+      margin-top: 1rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    &__priority {
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      letter-spacing: 0.08em;
+    }
+
+    &__progress {
+      font-size: 0.78rem;
+      gap: 0.4rem;
+    }
+
+    &__footer {
+      margin-top: 0.8rem;
+      padding-top: 0.7rem;
     }
   }
 }

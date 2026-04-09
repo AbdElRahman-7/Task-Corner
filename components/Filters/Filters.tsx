@@ -60,8 +60,7 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
             placeholder="Search workspaces..."
             value={search}
             onChange={(e) => dispatch(setSearch(e.target.value))}
-            className="filterCompactInput"
-            style={{ width: '280px' }}
+            className="filterCompactInput filterCompactInput--home"
           />
           <button
             onClick={() => {
@@ -115,7 +114,7 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
 
   return (
     <div className="filters">
-      <div className="filterGroup" style={{ flex: 1, minWidth: '200px' }}>
+      <div className="filterGroup filterGroup--grow">
         <label className="filterLabel">
           {isHomePage ? "Search Workspaces" : "Search Items"}
         </label>

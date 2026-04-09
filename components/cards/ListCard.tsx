@@ -105,8 +105,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
             onKeyDown={(e) => {
               if (e.key === "Enter") handleAddTask();
             }}
-            className="formInput"
-            style={{ marginBottom: '0.75rem', padding: '0.6rem 0.9rem', fontSize: '0.85rem' }}
+            className="formInput listCard__quickInput"
           />
           <button onClick={handleAddTask} className="listCard__addBtn">
             + Add Task
