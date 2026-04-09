@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { type Board as BoardType } from "../../types/index";
 
@@ -8,9 +9,16 @@ interface BoardProps {
 
 const Board = ({ board }: BoardProps) => {
   return (
-    <Link href={`/board/${board.id}`} className="block">
-      <div className="border p-4 rounded bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer">
-        <h2 className="text-lg font-bold mb-4">{board.title}</h2>
+    <Link href={`/board/${board.id}`} className="boardCard">
+      <div>
+        <h2 className="boardCard__title">{board.title}</h2>
+      </div>
+
+      <div className="boardCard__meta">
+        <span className="boardCard__count">
+          {board.listIds?.length || 0} columns
+        </span>
+        <div className="boardCard__arrow">→</div>
       </div>
     </Link>
   );

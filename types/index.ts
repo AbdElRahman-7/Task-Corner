@@ -6,11 +6,13 @@ export interface Task {
   priority: "low" | "medium" | "high";
   dueDate?: string;
   assignee?: string;
-  labels: string[]; 
+  labels: string[];
   checklist: { id: string; text: string; done: boolean }[];
-  progress: number; 
+  progress: number;
   status: "todo" | "in progress" | "done" | string;
   autoDone?: boolean;
+  listId: string; 
+
   createdAt: number;
 }
 export interface List {
@@ -24,11 +26,11 @@ export interface Board {
   title: string;
   listIds: string[];
 }
-
 export interface Label {
   id: string;
   title: string;
   color: string;
+  listId?: string; 
 }
 export interface BoardsState {
   boards: { [id: string]: Board };
@@ -36,4 +38,11 @@ export interface BoardsState {
   tasks: { [id: string]: Task };
   labels: { [id: string]: Label };
   selectedBoardId?: string;
+  filters: {
+    search: string;
+    priority: string[];
+    labelIds: string[];
+    status: "all" | string;
+    due: "all" | "today" | "overdue";
+  };
 }

@@ -1,0 +1,16 @@
+// =========================================
+// Main Sass Entry Point
+// =========================================
+
+// 1. Core Partials (Order matters: variables first)
+@forward 'variables';
+@forward 'mixins';
+@forward 'animations';
+
+// 2. Component Partials
+@forward '../components/Header/header';
+@forward '../app/home';
+@forward '../components/Board/board';
+@forward '../components/cards/cards';
+@forward '../components/modals/modals';
+@forward '../components/Filters/filters';

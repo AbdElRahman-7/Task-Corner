@@ -1,31 +1,87 @@
 @import "tailwindcss";
-/* Variables */
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@variant dark (&:where(.dark, .dark *));
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ===========================
+   Base Styles
+   =========================== */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-html.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
-}
-body {
-  @apply bg-emerald-300 text-black transition-colors duration-300;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: background 0.25s ease, color 0.25s ease;
+  margin: 0;
+  padding: 0;
 }
 
-/* Dark mode */
+/* Dark mode body */
 html.dark body {
-  @apply bg-gray-900 text-cyan-300;
+  background: #060b18;
+  color: #e8edf5;
 }
 
-/* مثال على component */
-.task {
-  @apply bg-emerald-300 dark:bg-gray-800 p-2 rounded shadow mb-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors;
+/* ===========================
+   Scrollbars
+   =========================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #1e2d47;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #334466;
+}
+
+/* ===========================
+   Focus Ring
+   =========================== */
+:focus-visible {
+  outline: 2px solid #4f8ef7;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ===========================
+   Animations
+   =========================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn  { animation: fadeIn 0.2s ease forwards; }
+.animate-scaleIn { animation: scaleIn 0.2s ease forwards; }

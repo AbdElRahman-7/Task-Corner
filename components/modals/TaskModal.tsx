@@ -1,443 +1,339 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Task, Label } from "../../types/index";
-import { updateTask, addLabel } from "../../store/boardSlice";
+import { Task } from "../../types/index";
+import { updateTask, deleteTask } from "../../store/boardSlice";
 import { RootState } from "../../store/index";
+import { 
+  X, 
+  AlignLeft, 
+  CheckSquare, 
+  Tag, 
+  AlertCircle, 
+  Trash2, 
+  Type,
+  Plus,
+  Save,
+  User,
+  Clock,
+} from "lucide-react";
+
+import CustomSelect from "../Filters/CustomSelect";
+import { addLabel, deleteLabel } from "../../store/boardSlice";
+import { toast } from "react-hot-toast";
 
 interface TaskModalProps {
-  task: Task;
+  taskId: string;
   listId: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TaskModal = ({ task, listId, isOpen, onClose }: TaskModalProps) => {
+const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
   const dispatch = useDispatch();
-  const allLabels = useSelector((state: RootState) => state.boards.labels);
   
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description);
-  const [priority, setPriority] = useState(task.priority);
-  const [dueDate, setDueDate] = useState(task.dueDate || "");
-  const [assignee, setAssignee] = useState(task.assignee || "");
-  const [autoDone, setAutoDone] = useState(task.autoDone || false);
-  const [checklist, setChecklist] = useState(task.checklist);
+  const tasks = useSelector((state: RootState) => state.boards.tasks);
+  const task = tasks[taskId];
+  const lists = useSelector((state: RootState) => state.boards.lists);
+  const allLabels = useSelector((state: RootState) => state.boards.labels);
+  const listTitle = lists[listId]?.title || "Unknown List";
+  
   const [newCheckItem, setNewCheckItem] = useState("");
-  const [selectedLabels, setSelectedLabels] = useState<string[]>(task.labels);
+  const [newLabelTitle, setNewLabelTitle] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
+
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const handleSaveChanges = () => {
+    toast.success("Changes saved successfully!");
+    handleClose();
+  };
+
 
   useEffect(() => {
-    if (isOpen) {
-      setTitle(task.title);
-      setDescription(task.description);
-      setPriority(task.priority);
-      setDueDate(task.dueDate || "");
-      setAssignee(task.assignee || "");
-      setAutoDone(task.autoDone || false);
-      setChecklist(task.checklist);
-      setSelectedLabels(task.labels);
-    }
-  }, [isOpen, task]);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [handleClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !task) return null;
 
-  const handleSave = () => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      alert("Task title cannot be empty!");
-      return;
-    }
-
-    dispatch(updateTask({
-      taskId: task.id,
-      listId,
-      updates: {
-        title: trimmedTitle,
-        description,
-        priority,
-        dueDate,
-        assignee,
-        autoDone,
-        checklist,
-        labels: selectedLabels,
-      }
-    }));
-    onClose();
+  const handleUpdate = (updates: Partial<Task>) => {
+    dispatch(updateTask({ taskId: task.id, updates, listId }));
   };
 
-  const addCheckItem = () => {
-    if (!newCheckItem.trim()) return;
-    const newItem = { id: crypto.randomUUID(), text: newCheckItem, done: false };
-    const newChecklist = [...checklist, newItem];
-    setChecklist(newChecklist);
-    setNewCheckItem("");
-    
-    dispatch(updateTask({
-      taskId: task.id,
-      listId,
-      updates: { checklist: newChecklist }
-    }));
-  };
-
-  const toggleCheckItem = (id: string) => {
-    const newChecklist = checklist.map(item => 
-      item.id === id ? { ...item, done: !item.done } : item
+  const handleToggleCheckItem = (itemId: string) => {
+    const newChecklist = task.checklist.map((item) =>
+      item.id === itemId ? { ...item, done: !item.done } : item
     );
-    setChecklist(newChecklist);
-    
-    dispatch(updateTask({
-      taskId: task.id,
-      listId,
-      updates: { checklist: newChecklist }
-    }));
+    handleUpdate({ checklist: newChecklist });
   };
 
-  const removeCheckItem = (id: string) => {
-    const newChecklist = checklist.filter(item => item.id !== id);
-    setChecklist(newChecklist);
-    
-    // Immediate save for checklist items
-    dispatch(updateTask({
-      taskId: task.id,
-      listId,
-      updates: { checklist: newChecklist }
-    }));
+  const handleAddCheckItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCheckItem.trim()) return;
+    const newItem = {
+      id: crypto.randomUUID(),
+      text: newCheckItem.trim(),
+      done: false,
+    };
+    handleUpdate({ checklist: [...task.checklist, newItem] });
+    setNewCheckItem("");
   };
 
-  const toggleLabel = (labelId: string) => {
-    if (selectedLabels.includes(labelId)) {
-      setSelectedLabels(selectedLabels.filter(id => id !== labelId));
-    } else {
-      setSelectedLabels([...selectedLabels, labelId]);
+  const handleDeleteCheckItem = (itemId: string) => {
+    const newChecklist = task.checklist.filter((item) => item.id !== itemId);
+    handleUpdate({ checklist: newChecklist });
+  };
+
+  const handleToggleLabel = (labelId: string) => {
+    const newLabels = task.labels.includes(labelId)
+      ? task.labels.filter(id => id !== labelId)
+      : [...task.labels, labelId];
+    handleUpdate({ labels: newLabels });
+  };
+
+  const handleCreateLabel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLabelTitle.trim()) return;
+    const labelId = crypto.randomUUID();
+    dispatch(addLabel({ id: labelId, title: newLabelTitle.trim(), color: newLabelColor }));
+    setNewLabelTitle("");
+    toast.success(`Label "${newLabelTitle}" created!`);
+  };
+
+  const globalDeleteLabel = (labelId: string) => {
+    if (window.confirm("Delete this label globally?")) {
+      dispatch(deleteLabel(labelId));
+      toast.success("Label deleted");
     }
   };
 
-  const handleCreateLabel = () => {
-    const nameInput = prompt("Label name:");
-    if (!nameInput || !nameInput.trim()) {
-      alert("Label name cannot be empty!");
-      return;
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      dispatch(deleteTask({ listId, taskId: task.id }));
+      onClose();
     }
-    
-    const colorInput = prompt("Color (hex or name):", "#3b82f6");
-    if (!colorInput || !colorInput.trim()) {
-      alert("Label color cannot be empty!");
-      return;
-    }
-
-    const title = nameInput.trim();
-    const color = colorInput.trim();
-    
-    const id = crypto.randomUUID();
-    dispatch(addLabel({ id, title, color }));
-    setSelectedLabels([...selectedLabels, id]);
   };
+
+  const progress = task.checklist.length > 0
+    ? (task.checklist.filter(i => i.done).length / task.checklist.length) * 100
+    : 0;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <input 
-            className="modal-title-input"
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
-          />
-          <button className="close-btn" onClick={onClose}>&times;</button>
-        </div>
+    <div className="backdrop" onClick={handleClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modalClose" onClick={handleClose} aria-label="Close Modal">
+          <X size={24} />
+        </button>
 
-        <div className="modal-body">
-          <div className="modal-section">
-            <label>Description</label>
-            <textarea 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a more detailed description..."
+        <div className="modalHeader">
+          <div className="modalTitleRow">
+            <Type className="modalHeaderIcon" size={28} />
+            <input
+              type="text"
+              value={task.title}
+              onChange={(e) => handleUpdate({ title: e.target.value })}
+              className="modalTitleInput"
+              placeholder="Task Title"
             />
           </div>
+          <p className="modalSubtitle">
+            in list <span className="modalSubtitleList">{listTitle}</span>
+          </p>
+        </div>
 
-          <div className="modal-grid">
-            <div className="modal-section">
-              <label>Priority</label>
-              <select value={priority} onChange={(e) => setPriority(e.target.value as any)}>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-
-            <div className="modal-section">
-              <label>Due Date</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-
-            <div className="modal-section">
-              <label>Assignee</label>
-              <input type="text" value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Name" />
-            </div>
-
-            <div className="modal-section">
-              <label className="checkbox-label">
-                <input type="checkbox" checked={autoDone} onChange={(e) => setAutoDone(e.target.checked)} />
-                Auto-mark Done when checklist ends
-              </label>
-            </div>
-          </div>
-
-          <div className="modal-section">
-            <label>Labels</label>
-            <div className="labels-list">
-              {Object.values(allLabels).map(label => (
-                <span 
-                  key={label.id} 
-                  className={`label-item ${selectedLabels.includes(label.id) ? 'selected' : ''}`}
-                  style={{ backgroundColor: label.color }}
-                  onClick={() => toggleLabel(label.id)}
-                >
-                  {label.title}
-                </span>
-              ))}
-              <button className="add-label-btn" onClick={handleCreateLabel}>+ New Label</button>
-            </div>
-          </div>
-
-          <div className="modal-section">
-            {(() => {
-              const total = checklist.length;
-              const done = checklist.filter(i => i.done).length;
-              const currentProgress = total === 0 ? 0 : Math.round((done / total) * 100);
-              
-              return (
-                <>
-                  <label>Checklist ({currentProgress}%)</label>
-                  <div className="progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ 
-                        width: `${currentProgress}%`,
-                        backgroundColor: currentProgress === 100 ? '#5ba03a' : '#5ba03a' 
-                      }} 
-                    ></div>
-                  </div>
-                </>
-              );
-            })()}
-            <div className="checklist-items">
-              {checklist.map(item => (
-                <div key={item.id} className="checklist-item">
-                  <input 
-                    type="checkbox" 
-                    checked={item.done} 
-                    onChange={() => toggleCheckItem(item.id)} 
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span 
-                    className={item.done ? 'done' : ''} 
-                    onClick={() => toggleCheckItem(item.id)}
-                    style={{ cursor: 'pointer', flex: 1 }}
-                  >
-                    {item.text}
-                  </span>
-                  <button className="delete-item-btn" onClick={() => removeCheckItem(item.id)}>&times;</button>
-                </div>
-              ))}
-            </div>
-            <div className="add-check-item">
-              <input 
-                value={newCheckItem} 
-                onChange={(e) => setNewCheckItem(e.target.value)} 
-                placeholder="Add an item"
-                onKeyDown={(e) => e.key === 'Enter' && addCheckItem()}
-                className="add-item-input"
+        <div className="taskContent">
+          <div className="mainSection">
+            <div className="formGroup">
+              <div className="sectionHeader">
+                <AlignLeft size={18} />
+                <label className="formLabel">Description</label>
+              </div>
+              <textarea
+                value={task.description}
+                onChange={(e) => handleUpdate({ description: e.target.value })}
+                placeholder="Add a more detailed description..."
+                className="formTextarea"
               />
+            </div>
+
+            <div className="formGroup">
+              <div className="sectionHeader">
+                <CheckSquare size={18} />
+                <label className="formLabel">Checklist</label>
+              </div>
+              
+              <div className="progressContainer">
+                <div className="progressHeader">
+                  <span className="progressLabel">{Math.round(progress)}% Complete</span>
+                  <label className="autoDoneToggle">
+                    <input 
+                      type="checkbox" 
+                      checked={task.autoDone} 
+                      onChange={(e) => handleUpdate({ autoDone: e.target.checked })}
+                      className="autoDoneCheckbox"
+                    />
+                    <span>Auto-complete when finished</span>
+                  </label>
+                </div>
+                <div className="progressTrack">
+                  <div className="progressBar" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+
+              <div className="checklistItems">
+                {task.checklist.map((item) => (
+                  <div key={item.id} className="checkItem">
+                    <input
+                      type="checkbox"
+                      checked={item.done}
+                      onChange={() => handleToggleCheckItem(item.id)}
+                      className="checkbox"
+                    />
+                    <span 
+                      className={`checkLabel ${item.done ? 'checkLabel--done' : ''}`}
+                      onClick={() => handleToggleCheckItem(item.id)}
+                    >
+                      {item.text}
+                    </span>
+                    <button 
+                      className="checkItem__delete" 
+                      onClick={() => handleDeleteCheckItem(item.id)}
+                      title="Delete item"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleAddCheckItem} className="addCheckItemForm">
+                <Plus size={16} className="addCheckIcon" />
+                <input
+                  type="text"
+                  placeholder="Add an item..."
+                  value={newCheckItem}
+                  onChange={(e) => setNewCheckItem(e.target.value)}
+                  className="addCheckInput"
+                />
+              </form>
+            </div>
+          </div>
+
+          <div className="sidebar">
+            <div className="sidebarSection">
+              <div className="sidebarSectionHeader">
+                <Tag size={14} />
+                <span>Labels</span>
+              </div>
+              <div className="labelGrid">
+                {Object.values(allLabels).map((label) => (
+                  <div key={label.id} className="labelItem">
+                    <button
+                      className={`labelToggle ${task.labels.includes(label.id) ? 'labelToggle--active' : ''}`}
+                      style={{ backgroundColor: label.color }}
+                      onClick={() => handleToggleLabel(label.id)}
+                      title={label.title}
+                    >
+                      {label.title}
+                    </button>
+                    <button 
+                      className="labelDeleteBtn" 
+                      onClick={(e) => { e.stopPropagation(); globalDeleteLabel(label.id); }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleCreateLabel} className="addLabelForm">
+                <input
+                  type="text"
+                  placeholder="New label..."
+                  value={newLabelTitle}
+                  onChange={(e) => setNewLabelTitle(e.target.value)}
+                  className="addLabelInput"
+                />
+                <input
+                  type="color"
+                  value={newLabelColor}
+                  onChange={(e) => setNewLabelColor(e.target.value)}
+                  className="addLabelColor"
+                />
+                <button type="submit" className="addLabelBtn">
+                  <Plus size={14} />
+                </button>
+              </form>
+            </div>
+
+            <div className="sidebarSection">
+              <div className="sidebarSectionHeader">
+                <AlertCircle size={14} />
+                <span>Priority</span>
+              </div>
+              <CustomSelect
+                options={[
+                  { value: "low", label: "Low", color: "#10b981" },
+                  { value: "medium", label: "Medium", color: "#f59e0b" },
+                  { value: "high", label: "High", color: "#ef4444" },
+                ]}
+                value={task.priority}
+                onChange={(val) => handleUpdate({ priority: val as any })}
+              />
+            </div>
+
+            <div className="sidebarSection">
+              <div className="sidebarSectionHeader">
+                <User size={14} />
+                <span>Assignee</span>
+              </div>
+              <div className="assigneeInputWrapper">
+                <input
+                  type="text"
+                  placeholder="Add assignee..."
+                  value={task.assignee || ""}
+                  onChange={(e) => handleUpdate({ assignee: e.target.value })}
+                  className="formInput"
+                />
+              </div>
+            </div>
+
+            <div className="sidebarSection">
+              <div className="sidebarSectionHeader">
+                <Clock size={14} />
+                <span>Deadline</span>
+              </div>
+              <input
+                type="datetime-local"
+                value={task.dueDate ? task.dueDate.substring(0, 16) : ""}
+                onChange={(e) => handleUpdate({ dueDate: e.target.value })}
+                className="formInput"
+              />
+            </div>
+
+            <div className="sidebarSection" style={{ marginTop: 'auto' }}>
               <button 
-                onClick={addCheckItem}
-                className="add-item-btn"
+                onClick={handleSaveChanges} 
+                className="btnSave"
               >
-                Add
+                <Save size={18} />
+                Save Changes
+              </button>
+
+
+              <button onClick={handleDelete} className="btnDanger" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Trash2 size={16} />
+                Delete Task
               </button>
             </div>
           </div>
         </div>
-
-        <div className="modal-footer">
-          <button className="save-btn" onClick={handleSave}>Save Changes</button>
-        </div>
       </div>
-
-      <style jsx>{`
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .modal-content {
-          background: #f4f5f7;
-          width: 600px;
-          max-height: 90vh;
-          border-radius: 8px;
-          display: flex;
-          flex-direction: column;
-          color: #172b4d;
-          overflow: hidden;
-        }
-        .modal-header {
-          padding: 16px 24px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .modal-title-input {
-          font-size: 20px;
-          font-weight: 600;
-          border: none;
-          background: transparent;
-          width: 100%;
-          padding: 4px;
-          border-radius: 4px;
-        }
-        .modal-title-input:focus {
-          background: white;
-          outline: 2px solid #3b82f6;
-        }
-        .close-btn {
-          font-size: 24px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #6b778c;
-        }
-        .modal-body {
-          padding: 0 24px 24px;
-          overflow-y: auto;
-          flex: 1;
-        }
-        .modal-section {
-          margin-bottom: 24px;
-        }
-        .modal-section label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 8px;
-          font-size: 14px;
-        }
-        textarea {
-          width: 100%;
-          min-height: 80px;
-          padding: 8px;
-          border-radius: 4px;
-          border: 1px solid #ddd;
-          resize: vertical;
-        }
-        .modal-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        select, input[type="date"], input[type="text"] {
-          width: 100%;
-          padding: 8px;
-          border-radius: 4px;
-          border: 1px solid #ddd;
-        }
-        .checkbox-label {
-          display: flex !important;
-          align-items: center;
-          gap: 8px;
-          font-weight: normal !important;
-          cursor: pointer;
-          margin-top: 24px;
-        }
-        .labels-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .label-item {
-          padding: 4px 12px;
-          border-radius: 4px;
-          color: white;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          opacity: 0.6;
-          transition: opacity 0.2s;
-        }
-        .label-item.selected {
-          opacity: 1;
-          box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6;
-        }
-        .add-label-btn {
-          padding: 4px 12px;
-          border-radius: 4px;
-          background: #091e420f;
-          border: none;
-          cursor: pointer;
-          font-size: 12px;
-        }
-        .progress-bar-bg {
-          background: #091e420f;
-          height: 8px;
-          border-radius: 4px;
-          margin-bottom: 12px;
-        }
-        .progress-bar-fill {
-          background: #5ba03a;
-          height: 100%;
-          border-radius: 4px;
-          transition: width 0.3s ease;
-        }
-        .checklist-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 8px;
-        }
-        .checklist-item .done {
-          text-decoration: line-through;
-          color: #6b778c;
-        }
-        .delete-item-btn {
-          margin-left: auto;
-          color: #ef4444;
-          background: none;
-          border: none;
-          cursor: pointer;
-        }
-        .add-check-item {
-          display: flex;
-          gap: 8px;
-          margin-top: 12px;
-        }
-        .add-check-item input {
-          flex: 1;
-          padding: 6px;
-        }
-        .modal-footer {
-          padding: 16px 24px;
-          background: #f4f5f7;
-          border-top: 1px solid #ddd;
-          display: flex;
-          justify-content: flex-end;
-        }
-        .save-btn {
-          background: #0079bf;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .save-btn:hover {
-          background: #026aa7;
-        }
-      `}</style>
     </div>
   );
 };

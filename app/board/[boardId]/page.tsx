@@ -1,20 +1,31 @@
 "use client";
+import { use, useState, useCallback } from "react";
+import { 
+  DndContext, 
+  closestCorners, 
+  PointerSensor, 
+  useSensor, 
+  useSensors, 
+  DragEndEvent, 
+  DragStartEvent, 
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+  closestCenter
+} from "@dnd-kit/core";
 
-import { use, useState } from "react";
-import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
-  verticalListSortingStrategy,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@store/index";
 import { addCustomList, moveTask, reorderLists } from "@store/boardSlice";
 import Link from "next/link";
 import ListCard from "@components/cards/ListCard";
+import TaskCard from "@components/cards/TaskCard";
 import TaskModal from "@components/modals/TaskModal";
 import { Task } from "../../../types/index";
+import { toast } from "react-hot-toast";
 
 export default function BoardPage({
   params,
@@ -31,44 +42,77 @@ export default function BoardPage({
   const dispatch = useDispatch();
   const board = useSelector((state: RootState) => state.boards.boards[boardId]);
   const lists = useSelector((state: RootState) => state.boards.lists);
+  const tasks = useSelector((state: RootState) => state.boards.tasks);
+
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<"task" | "list" | null>(null);
 
   if (!board) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Board not found</h1>
-        <Link href="/" className="text-blue-500 hover:underline">
-          &larr; Back to boards
-        </Link>
+      <div className="notFound">
+        <h1>Board Not Found</h1>
+        <Link href="/">Back to Dashboard</Link>
       </div>
     );
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setActiveType(event.active.data.current?.type);
+  };
+
+  const handleDragOver = (event: any) => {
     const { active, over } = event;
     if (!over) return;
 
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
 
-    console.log(`Dragging ${activeType} ${active.id} over ${overType} ${over.id}`);
+    if (activeType === "task") {
+      const activeTaskId = active.id as string;
+      const fromListId = active.data.current?.listId;
+      
+      const toListId = over.data.current?.listId || 
+                       (overType === "list" ? over.id.toString().replace("list-drop-", "") : undefined);
+
+      if (!fromListId || !toListId) return;
+
+
+      const toListIdStr = toListId as string;
+      
+      let newIndex = -1;
+      if (overType === "task") {
+        const targetList = lists[toListIdStr];
+        if (targetList) {
+          newIndex = targetList.taskIds.indexOf(over.id as string);
+        }
+      }
+
+      dispatch(moveTask({ taskId: activeTaskId, fromListId, toListId: toListIdStr, newIndex }));
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    setActiveType(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
 
     if (activeType === "task") {
       const activeTaskId = active.id as string;
       const fromListId = active.data.current?.listId;
       
-      let toListId = over.data.current?.listId || (overType === "list" ? over.id : undefined);
+      const toListId = over.data.current?.listId || 
+                       (overType === "list" ? over.id.toString().replace("list-drop-", "") : undefined);
 
-      if (!fromListId || !toListId) {
-        console.warn("Could not determine source or target list", { fromListId, toListId });
-        return;
-      }
+      if (!fromListId || !toListId) return;
 
       const toListIdStr = toListId as string;
       const toList = lists[toListIdStr];
-      if (!toList) {
-        console.error("Target list not found", toListIdStr);
-        return;
-      }
+      if (!toList) return;
 
       let newIndex = 0;
       if (overType === "task") {
@@ -77,87 +121,98 @@ export default function BoardPage({
         newIndex = toList.taskIds.length;
       }
 
-      console.log(`Moving task ${activeTaskId} from ${fromListId} to ${toListIdStr} at index ${newIndex}`);
       dispatch(moveTask({ taskId: activeTaskId, fromListId, toListId: toListIdStr, newIndex }));
+      toast.success("Task moved!");
     } else if (activeType === "list") {
-      const oldIndex = board.listIds.indexOf(active.id as string);
-      const newIndex = board.listIds.indexOf(over.id as string);
+      const activeId = active.id as string;
+      const targetListId = over.data.current?.listId || (over.id as string);
+      
+      const oldIndex = board.listIds.indexOf(activeId);
+      const newIndex = board.listIds.indexOf(targetListId);
 
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        console.log(`Reordering list ${active.id} from index ${oldIndex} to ${newIndex}`);
         dispatch(reorderLists({ boardId, oldIndex, newIndex }));
+        toast.success("List reordered!");
       }
     }
   };
+
   const handleAddCustomList = () => {
-    if (!newListTitle.trim()) return;
-    dispatch(addCustomList({ boardId, title: newListTitle.trim() }));
+    const title = newListTitle.trim();
+    if (!title) return;
+    dispatch(addCustomList({ boardId, title }));
+    toast.success(`List "${title}" created!`);
     setNewListTitle("");
   };
 
-  const handleTaskClick = (task: Task, listId: string) => {
+  const handleTaskClick = useCallback((task: Task, listId: string) => {
     setSelectedTask(task);
     setSelectedListId(listId);
-  };
+  }, []);
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="p-6">
-        <Link
-          href="/"
-          className="text-blue-500 hover:underline mb-4 inline-block"
-        >
-          &larr; Back to boards
-        </Link>
+      <div className="boardPage">
+        <div className="boardHeader">
+          <Link href="/" className="backLink">
+            <span className="backLink__icon">&larr;</span>
+            Back to Dashboard
+          </Link>
 
-        <h1 className="font-bold text-2xl mb-4">{board.title}</h1>
+          <h1 className="boardTitle">{board.title}</h1>
+        </div>
 
-        <div className="flex gap-4 items-start">
+        <div className="boardContent">
           <SortableContext
             items={board.listIds}
             strategy={horizontalListSortingStrategy}
           >
-            {board.listIds.map((listId) => {
+            {board.listIds.map((listId, index) => {
               const listData = lists[listId];
               if (!listData) return null;
               return (
-                <ListCard 
-                  key={listId} 
-                  id={listId} 
-                  list={listData} 
-                  onTaskClick={(task) => handleTaskClick(task, listId)} 
-                />
+                <div key={listId} style={{ "--i": index } as any}>
+                  <ListCard 
+                    id={listId} 
+                    list={listData} 
+                    index={index}
+                    onTaskClick={(task) => handleTaskClick(task, listId)} 
+                  />
+                </div>
               );
             })}
           </SortableContext>
 
-          <div className="w-64 p-4 shrink-0 bg-gray-100 rounded text-black">
+          <div className="addListPanel" style={{ "--i": board.listIds.length } as any}>
             <input
               type="text"
-              placeholder="New list title"
+              placeholder="Add list..."
               value={newListTitle}
               onChange={(e) => setNewListTitle(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddCustomList();
               }}
-              className="w-full p-2 text-black mb-2 border rounded"
+              className="addListPanel__input"
             />
             <button
               onClick={handleAddCustomList}
-              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+              className="addListPanel__button"
             >
-              Add List
+              + Add List
             </button>
           </div>
         </div>
 
         {selectedTask && selectedListId && (
           <TaskModal 
-            task={selectedTask} 
+            taskId={selectedTask.id} 
             listId={selectedListId}
             isOpen={!!selectedTask} 
             onClose={() => {
@@ -166,8 +221,34 @@ export default function BoardPage({
             }} 
           />
         )}
+
+        <DragOverlay dropAnimation={{
+          sideEffects: defaultDropAnimationSideEffects({
+            styles: {
+              active: {
+                opacity: "0.5",
+              },
+            },
+          }),
+        }}>
+          {activeId && activeType === "task" ? (
+            <TaskCard 
+              id={activeId} 
+              task={tasks[activeId]} 
+              listId=""
+              onClick={() => {}} 
+              isOverlay
+            />
+          ) : activeId && activeType === "list" ? (
+            <ListCard 
+              id={activeId} 
+              list={lists[activeId]} 
+              onTaskClick={() => {}} 
+              isOverlay
+            />
+          ) : null}
+        </DragOverlay>
       </div>
     </DndContext>
   );
 }
-

@@ -1,11 +1,21 @@
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import boardReducer from "./boardSlice";
-import { configureStore } from "@reduxjs/toolkit";
+import { loadState, saveState } from "./localStorage";
 
-export const store = configureStore({
-  reducer: {
-    boards: boardReducer,
-  },
+const rootReducer = combineReducers({
+  boards: boardReducer,
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+const preloadedState = loadState();
+
+export const store = configureStore({
+  reducer: rootReducer,
+  preloadedState,
+});
+
+store.subscribe(() => {
+  saveState(store.getState());
+});
+
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;

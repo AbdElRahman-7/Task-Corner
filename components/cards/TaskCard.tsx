@@ -1,102 +1,110 @@
-import React from 'react'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { Task, Label } from '../../types/index'
-import { useSelector } from 'react-redux'
-import { RootState } from '../../store/index'
+import React, { memo } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Task } from "../../types/index";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/index";
+import { 
+  User,
+  Clock,
+  AlertCircle,
+  CheckSquare,
+  List
+} from "lucide-react";
+
 
 interface TaskCardProps {
   id: string;
   task?: Task;
   listId: string;
   onClick: (task: Task) => void;
+  isOverlay?: boolean;
 }
 
-const TaskCard = ({ id, task, listId, onClick }: TaskCardProps) => {
+const TaskCard = memo(({ id, task, listId, onClick, isOverlay }: TaskCardProps) => {
   const allLabels = useSelector((state: RootState) => state.boards.labels);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id, data: { type: 'task', listId } });
+    useSortable({ id, data: { type: "task", listId }, disabled: isOverlay });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    padding: '8px 12px',
-    margin: '4px 0',
-    background: '#fff',
-    borderRadius: '6px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-    cursor: 'pointer',
-    color: '#333',
-    position: 'relative' as const,
+  const dragStyle = {
+    transform: isOverlay ? undefined : CSS.Transform.toString(transform),
+    transition: isOverlay ? undefined : transition,
+    opacity: isDragging && !isOverlay ? 0.35 : 1,
   };
 
   if (!task) return null;
 
-  const priorityColors = {
-    low: '#22c55e',
-    medium: '#f59e0b',
-    high: '#ef4444',
-  };
-
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
-  const completedItems = task.checklist.filter(i => i.done).length;
+  const completedItems = task.checklist.filter((item) => item.done).length;
   const totalItems = task.checklist.length;
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...attributes} 
+    <div
+      ref={setNodeRef}
+      style={dragStyle}
+      {...attributes}
       {...listeners}
       onClick={() => onClick(task)}
+      className={`taskCard taskCard--${task.priority} ${task.status === "done" || task.progress === 100 ? "taskCard--done" : ""} ${isDragging && !isOverlay ? "taskCard--dragging" : ""} ${isOverlay ? "taskCard--overlay" : ""}`}
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
-        {task.labels.map(labelId => (
-          <span 
-            key={labelId}
-            style={{ 
-              height: '8px', 
-              width: '40px', 
-              borderRadius: '4px', 
-              backgroundColor: allLabels[labelId]?.color || '#ddd' 
-            }}
-          />
-        ))}
+      {task.labels.length > 0 && (
+        <div className="taskCard__labels">
+          {task.labels.map((labelId) => {
+            const label = allLabels[labelId];
+            if (!label) return null;
+            return (
+              <div
+                key={labelId}
+                className="taskCard__label"
+                style={{ backgroundColor: label.color }}
+                title={label.title}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      <div className={`taskCard__title ${task.status === "done" || task.progress === 100 ? "taskCard__title--done" : ""}`}>
+        {task.title}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <div style={{ 
-          width: '8px', 
-          height: '8px', 
-          borderRadius: '50%', 
-          backgroundColor: priorityColors[task.priority] 
-        }} title={`Priority: ${task.priority}`} />
-        <h4 style={{ margin: 0, fontSize: '14px', flex: 1 }}>{task.title}</h4>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px', fontSize: '11px', color: '#6b778c' }}>
-        {task.dueDate && (
-          <span style={{ color: isOverdue ? '#ef4444' : 'inherit', fontWeight: isOverdue ? 600 : 400 }}>
-            📅 {task.dueDate}
+      <div className="taskCard__meta">
+        {task.priority && (
+          <span className={`taskCard__priority taskCard__priority--${task.priority}`}>
+            <span className="taskCard__priorityDot" />
+            {task.priority}
           </span>
         )}
-        
+
         {totalItems > 0 && (
-          <span style={{ 
-            backgroundColor: task.progress === 100 ? '#5ba03a' : 'transparent',
-            color: task.progress === 100 ? 'white' : 'inherit',
-            padding: '2px 4px',
-            borderRadius: '3px'
-          }}>
-            Checklist {completedItems}/{totalItems}
+          <span className={`taskCard__progress ${task.progress === 100 ? "taskCard__progress--done" : ""}`}>
+            {task.progress === 100 ? <CheckSquare size={12} /> : <List size={12} />}
+            {completedItems}/{totalItems}
           </span>
         )}
 
-        {task.assignee && <span title={`Assignee: ${task.assignee}`}>👤</span>}
+      </div>
+
+      <div className="taskCard__footer">
+        {task.dueDate && (
+          <div className="taskCard__dueDate">
+            <Clock size={12} />
+            <span>{new Date(task.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+            {task.dueDate.includes('T') && (
+              <span className="taskCard__time">{new Date(task.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            )}
+          </div>
+        )}
+
+        {task.assignee && (
+          <div className="taskCard__assignee" title={`Assignee: ${task.assignee}`}>
+            <div className="taskCard__avatar">
+              {task.assignee.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+});
 
-export default TaskCard
+export default TaskCard;
