@@ -51,11 +51,13 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
     opacity: isDragging && !isOverlay ? 0.3 : 1,
   } as React.CSSProperties;
 
+      {/* Header */}
   const handleAddTask = () => {
     const title = newTaskTitle.trim();
     if (!title) return;
     dispatch(addTask({ listId: id, title }));
     toast.success(`Task "${title}" added!`);
+      {/* Task List */}
     setNewTaskTitle("");
   };
 
@@ -81,6 +83,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
                 <TaskCard
                   id={taskId}
                   task={tasks[taskId]}
+      {/* Footer / Add Task */}
                   listId={id}
                   onClick={onTaskClick}
                 />
