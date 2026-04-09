@@ -87,6 +87,10 @@
   @include tablet {
     padding: 1.5rem 2rem 1rem;
   }
+
+  @include mobile {
+    padding: 1rem 1rem 0.75rem;
+  }
 }
 
 .backLink {
@@ -118,6 +122,12 @@
     transform: translateY(1px);
     box-shadow: none;
   }
+
+  @include mobile {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.72rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .boardTitle {
@@ -147,16 +157,26 @@
     gap: 1.25rem;
     padding: 1rem 1.5rem 1.5rem;
   }
+
+  @include mobile {
+    gap: 1rem;
+    padding: 0.75rem 0.75rem 1rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  > div {
+    scroll-snap-align: start;
+  }
 }
 
 .addListPanel {
-  width: 330px;
+  width: clamp(280px, 85vw, 330px);
   flex-shrink: 0;
   padding: 2.5rem;
 
   @include mobile {
-    width: 280px;
-    padding: 1.8rem;
+    width: min(85vw, 300px);
+    padding: 1.2rem;
   }
   border: 2px dashed $brand-primary;
   border-radius: $radius-xl;

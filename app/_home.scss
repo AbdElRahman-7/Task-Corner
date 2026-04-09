@@ -217,21 +217,21 @@
 
 .boardGrid {
   display: grid;
-  grid-template-columns: repeat(4, 280px);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   justify-content: center;
   align-items: stretch;
   gap: 3.5rem;
 
   @include laptop {
-    grid-template-columns: repeat(auto-fill, 350px);
-    justify-content: flex-start;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
   }
   @include tablet {
-    gap: 2.5rem;
-    grid-template-columns: repeat(auto-fill, 340px);
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
   @include mobile {
-    gap: 1.5rem;
+    gap: 1rem;
     grid-template-columns: 1fr;
   }
 }

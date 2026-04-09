@@ -51,11 +51,11 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
 
   return (
     <div 
-      className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-amber-950/40 backdrop-blur-sm animate-in fade-in duration-300"
+      className="fixed inset-0 z-110 flex items-center justify-center p-3 sm:p-4 bg-amber-950/40 backdrop-blur-sm animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-amber-50 dark:bg-slate-900 shadow-2xl p-8 border border-amber-200 dark:border-slate-800 animate-in zoom-in-95 duration-300"
+        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-amber-50 dark:bg-slate-900 shadow-2xl p-4 sm:p-8 border border-amber-200 dark:border-slate-800 animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         <div 
@@ -71,7 +71,7 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
             Give your tasks a clear visual category.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             <div>
               <label 
                 htmlFor="label-title" 
@@ -94,7 +94,7 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
               <label className="block text-[10px] font-bold uppercase tracking-widest text-amber-900 dark:text-yellow-100 mb-3 opacity-50">
                 Select Color
               </label>
-              <div className="grid grid-cols-8 gap-2">
+              <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
                 {PRESET_COLORS.map((color) => (
                   <button
                     key={color}
@@ -115,7 +115,7 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
@@ -126,7 +126,7 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
               <button
                 type="submit"
                 disabled={!title.trim()}
-                className="flex-[2] px-4 py-3 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                className="flex-2 px-4 py-3 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                 style={{ 
                   backgroundColor: selectedColor,
                   color: "#fff",

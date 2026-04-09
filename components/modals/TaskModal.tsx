@@ -125,8 +125,8 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
 
   return (
     <div className="backdrop" onClick={handleClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modalClose" onClick={handleClose} aria-label="Close Modal">
+      <div className="modal modal--task" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="modalClose" onClick={handleClose} aria-label="Close Modal">
           <X size={24} />
         </button>
 
@@ -283,7 +283,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
                   { value: "high", label: "High", color: "#ef4444" },
                 ]}
                 value={task.priority}
-                onChange={(val) => handleUpdate({ priority: val as any })}
+                onChange={(val) => handleUpdate({ priority: val as Task["priority"] })}
               />
             </div>
 
@@ -316,7 +316,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
               />
             </div>
 
-            <div className="sidebarSection" style={{ marginTop: 'auto' }}>
+            <div className="sidebarSection taskModalSidebarActions">
               <button 
                 onClick={handleSaveChanges} 
                 className="btnSave"
@@ -326,7 +326,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
               </button>
 
 
-              <button onClick={handleDelete} className="btnDanger" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={handleDelete} className="btnDanger btnDanger--full">
                 <Trash2 size={16} />
                 Delete Task
               </button>

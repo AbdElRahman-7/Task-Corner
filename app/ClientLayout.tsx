@@ -21,7 +21,7 @@ export default function ClientLayout({
             containerStyle={{ zIndex: 99999 }}
           />
           <Header  />
-          <main className="px-10 pb-10">
+          <main className="px-3 sm:px-6 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
             {children}
           </main>
         
