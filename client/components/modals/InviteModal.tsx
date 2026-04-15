@@ -37,7 +37,8 @@ export default function InviteModal({ boardId, isOpen, onClose }: InviteModalPro
       const response = await apiFetch('/invite', {
         method: 'POST',
         body: JSON.stringify({ email, boardId }),
-        token
+        token,
+        auth: true,
       });
 
       if (response && response.link) {

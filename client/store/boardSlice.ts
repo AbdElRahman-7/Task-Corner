@@ -5,13 +5,13 @@ import { apiFetch } from "../utils/api";
 export const fetchBoards = createAsyncThunk("boards/fetchAll", async (_, thunkAPI) => {
   const state = thunkAPI.getState() as any;
   const token = state.auth.token;
-  return await apiFetch("/boards", { token });
+  return await apiFetch("/boards", { token, auth: true });
 });
 
 export const loadBoardData = createAsyncThunk("boards/loadData", async (id: string, thunkAPI) => {
   const state = thunkAPI.getState() as any;
   const token = state.auth.token;
-  return await apiFetch(`/boards/${id}`, { token });
+  return await apiFetch(`/boards/${id}`, { token, auth: true });
 });
 
 export const addBoardDB = createAsyncThunk("boards/add", async (title: string, thunkAPI) => {
@@ -20,7 +20,8 @@ export const addBoardDB = createAsyncThunk("boards/add", async (title: string, t
   return await apiFetch("/boards", {
     method: "POST",
     body: JSON.stringify({ title }),
-    token
+    token,
+    auth: true,
   });
 });
 
@@ -30,7 +31,8 @@ export const addTaskDB = createAsyncThunk("tasks/add", async ({ listId, title, o
   return await apiFetch("/tasks", {
     method: "POST",
     body: JSON.stringify({ listId, title, order }),
-    token
+    token,
+    auth: true,
   });
 });
 
@@ -40,7 +42,8 @@ export const updateTaskDB = createAsyncThunk("tasks/update", async ({ id, update
   return await apiFetch(`/tasks/${id}`, {
     method: "PUT",
     body: JSON.stringify(updates),
-    token
+    token,
+    auth: true,
   });
 });
 
@@ -49,7 +52,8 @@ export const deleteTaskDB = createAsyncThunk("tasks/delete", async (id: string, 
   const token = state.auth.token;
   return await apiFetch(`/tasks/${id}`, {
     method: "DELETE",
-    token
+    token,
+    auth: true,
   });
 });
 
