@@ -1,19 +1,36 @@
-const BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://task-corner.onrender.com/api";
+
+function getAuthTokenFromStorage(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("taskcorner_state");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { auth?: { token?: string | null } };
+    return parsed?.auth?.token ?? null;
+  } catch {
+    return null;
+  }
+}
 
 interface ApiOptions extends RequestInit {
   token?: string | null;
+  /** When true, sends Authorization using explicit token or taskcorner_state.auth.token */
+  auth?: boolean;
 }
 
 export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
-  const { token, ...fetchOptions } = options;
-  
+  const { token, auth, ...fetchOptions } = options;
+
+  const effectiveToken =
+    auth === true ? (token ?? getAuthTokenFromStorage()) : token ?? null;
+
   const headers = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(effectiveToken ? { Authorization: `Bearer ${effectiveToken}` } : {}),
     ...options.headers,
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...fetchOptions,
     headers,
   });
@@ -34,6 +51,6 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
   if (contentType && contentType.includes("application/json")) {
     return response.json();
   }
-  
+
   return response.text();
 };

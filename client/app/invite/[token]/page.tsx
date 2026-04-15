@@ -52,7 +52,8 @@ export default function InvitePage() {
     try {
       const response = await apiFetch(`/invite/${token}/accept`, {
         method: "POST",
-        token: authToken
+        token: authToken,
+        auth: true,
       });
       
       toast.success(response.message || "Successfully joined!");
