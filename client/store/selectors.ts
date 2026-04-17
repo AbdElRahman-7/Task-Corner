@@ -2,11 +2,11 @@ import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "./index";
 import { Task } from "../types/index";
 
-const selectTasks = (state: RootState) => state.boards.tasks;
 const selectFilters = (state: RootState) => state.boards.filters;
+type FiltersState = RootState["boards"]["filters"];
 
 // Helper to filter a single task based on global filters
-const matchesFilters = (task: Task, filters: any) => {
+const matchesFilters = (task: Task, filters: FiltersState) => {
   const matchesSearch =
     !filters.search ||
     (task.title + " " + (task.description || ""))

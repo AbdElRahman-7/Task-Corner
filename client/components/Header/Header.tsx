@@ -9,13 +9,15 @@ import { LogOut } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Filters from "../Filters/Filters";
 import ThemeToggle from "@components/ThemeProvider/ThemeToggle";
+import type { AppDispatch } from "@store/index";
 
 const Header = () => {
   const { token } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

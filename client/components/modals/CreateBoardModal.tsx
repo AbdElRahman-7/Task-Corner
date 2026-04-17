@@ -10,6 +10,7 @@ const CreateBoardModal = ({ isOpen, onClose, onCreate }: CreateBoardModalProps) 
   const [title, setTitle] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isOpen) setTitle("");
   }, [isOpen]);
 

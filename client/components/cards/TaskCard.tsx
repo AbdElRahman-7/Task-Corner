@@ -108,4 +108,5 @@ const TaskCard = memo(({ id, task, listId, onClick, isOverlay }: TaskCardProps) 
   );
 });
 
+TaskCard.displayName = "TaskCard";
 export default TaskCard;

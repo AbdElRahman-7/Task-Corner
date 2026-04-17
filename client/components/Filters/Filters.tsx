@@ -12,12 +12,12 @@ import {
 } from "../../store/boardSlice";
 import { toast } from "react-hot-toast";
 import { useMemo } from "react";
+import type { AppDispatch } from "../../store/index";
 
 const Filters = ({ compact = false }: { compact?: boolean }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
-  const isBoardPage = pathname.startsWith("/board/");
 
   const { search, priority, labelIds, status, due } = useSelector(
     (state: RootState) => state.boards.filters
@@ -167,7 +167,9 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
         <label className="filterLabel">Due Date</label>
         <select
           value={due}
-          onChange={(e) => dispatch(setDueFilter(e.target.value))}
+          onChange={(e) =>
+            dispatch(setDueFilter(e.target.value as RootState["boards"]["filters"]["due"]))
+          }
           className="filterSelect"
         >
           <option value="all">Anytime</option>

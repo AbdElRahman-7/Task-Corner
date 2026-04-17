@@ -64,7 +64,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
   };
 
   const handleToggleCheckItem = (itemId: string) => {
-    const newChecklist = task.checklist.map((item) =>
+    const newChecklist = checklist.map((item) =>
       item.id === itemId ? { ...item, done: !item.done } : item
     );
     handleUpdate({ checklist: newChecklist });
@@ -78,12 +78,12 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
       text: newCheckItem.trim(),
       done: false,
     };
-    handleUpdate({ checklist: [...task.checklist, newItem] });
+    handleUpdate({ checklist: [...checklist, newItem] });
     setNewCheckItem("");
   };
 
   const handleDeleteCheckItem = (itemId: string) => {
-    const newChecklist = task.checklist.filter((item) => item.id !== itemId);
+    const newChecklist = checklist.filter((item) => item.id !== itemId);
     handleUpdate({ checklist: newChecklist });
   };
 
@@ -117,8 +117,9 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
     }
   };
 
-  const progress = task.checklist.length > 0
-    ? (task.checklist.filter(i => i.done).length / task.checklist.length) * 100
+  const checklist = task.checklist ?? [];
+  const progress = checklist.length > 0
+    ? (checklist.filter((i) => i.done).length / checklist.length) * 100
     : 0;
 
   return (
@@ -184,7 +185,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
               </div>
 
               <div className="checklistItems">
-                {task.checklist.map((item) => (
+                {checklist.map((item) => (
                   <div key={item.id} className="checkItem">
                     <input
                       type="checkbox"

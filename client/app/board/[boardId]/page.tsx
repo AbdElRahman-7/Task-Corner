@@ -27,6 +27,7 @@ import TaskModal from "@components/modals/TaskModal";
 import InviteModal from "@components/modals/InviteModal";
 import { Task } from "../../../types/index";
 import { toast } from "react-hot-toast";
+import type { AppDispatch } from "@store/index";
 
 export default function BoardPage({
   params,
@@ -40,7 +41,7 @@ export default function BoardPage({
   const [newListTitle, setNewListTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const board = useSelector((state: RootState) => state.boards.boards[boardId]);
   const lists = useSelector((state: RootState) => state.boards.lists);
   const tasks = useSelector((state: RootState) => state.boards.tasks);
@@ -51,9 +52,14 @@ export default function BoardPage({
 
   useEffect(() => {
     if (boardId) {
-      dispatch(loadBoardData(boardId) as any);
+      dispatch(loadBoardData(boardId));
     }
   }, [boardId, dispatch]);
+
+  const handleTaskClick = useCallback((task: Task, listId: string) => {
+    setSelectedTask(task);
+    setSelectedListId(listId);
+  }, []);
 
   if (!board) {
     return (
@@ -150,11 +156,6 @@ export default function BoardPage({
     toast.success(`List "${title}" created!`);
     setNewListTitle("");
   };
-
-  const handleTaskClick = useCallback((task: Task, listId: string) => {
-    setSelectedTask(task);
-    setSelectedListId(listId);
-  }, []);
 
   return (
     <DndContext
