@@ -33,6 +33,7 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle("");
       setSelectedColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
     }

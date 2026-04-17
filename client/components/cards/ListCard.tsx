@@ -13,6 +13,7 @@ import { RootState } from "../../store/index";
 import { addTaskDB } from "../../store/boardSlice";
 import { toast } from "react-hot-toast";
 import { selectOrderedTasksByList } from "../../store/selectors";
+import type { AppDispatch } from "../../store/index";
 
 interface ListCardProps {
   id: string;
@@ -27,14 +28,11 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
   const tasks = useSelector((state: RootState) => state.boards.tasks);
   const selectTasksForThisList = React.useMemo(() => selectOrderedTasksByList(id), [id]);
   const listFilteredTasks = useSelector(selectTasksForThisList);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
 
   const statusType = list.title.toLowerCase().replace(/\s+/g, '-');
-  const isDone = statusType === 'done';
-  const isProgress = statusType === 'in-progress' || statusType === 'doing';
-  const isTodo = statusType === 'todo' || statusType === 'backlog';
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id, data: { type: "list", listId: id }, disabled: isOverlay });
@@ -54,7 +52,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
   const handleAddTask = () => {
     const title = newTaskTitle.trim();
     if (!title) return;
-    dispatch(addTaskDB({ listId: id, title, order: listFilteredTasks.length }) as any);
+    dispatch(addTaskDB({ listId: id, title, order: listFilteredTasks.length }));
     toast.success(`Task "${title}" added!`);
     setNewTaskTitle("");
   };
@@ -77,7 +75,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
             strategy={verticalListSortingStrategy}
           >
             {listFilteredTasks.map((taskId, tIndex) => (
-              <div key={taskId} style={{ "--i": tIndex } as any}>
+              <div key={taskId} style={{ "--i": tIndex } as React.CSSProperties}>
                 <TaskCard
                   id={taskId}
                   task={tasks[taskId]}
@@ -116,4 +114,5 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
   );
 });
 
+ListCard.displayName = "ListCard";
 export default ListCard;

@@ -1,3 +1,11 @@
+import type { RootState } from "./index";
+
+type PersistedState = Partial<RootState> & {
+  ui?: {
+    theme?: string;
+  };
+};
+
 export const loadState = () => {
   try {
     if (typeof window === "undefined") return undefined;
@@ -5,7 +13,7 @@ export const loadState = () => {
     if (serializedState === null) {
       return undefined;
     }
-    const parsed = JSON.parse(serializedState);
+    const parsed: PersistedState = JSON.parse(serializedState) as PersistedState;
     // Migrate stale 'system' theme to 'light'
     if (parsed?.ui?.theme === "system") {
       parsed.ui.theme = "light";
@@ -19,7 +27,7 @@ export const loadState = () => {
 
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
-export const saveState = (state: any) => {
+export const saveState = (state: RootState) => {
   if (saveTimeout) {
     clearTimeout(saveTimeout);
   }

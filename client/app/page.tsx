@@ -8,16 +8,18 @@ import { fetchBoards, addBoardDB } from "@store/boardSlice";
 import Board from "@components/Board/Board";
 import CreateBoardModal from "@components/modals/CreateBoardModal";
 import { toast } from "react-hot-toast";
+import type { AppDispatch } from "@store/index";
 
 export default function Home() {
   const boards = useSelector((state: RootState) => state.boards.boards);
   const search = useSelector((state: RootState) => state.boards.filters.search);
   const { token } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

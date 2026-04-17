@@ -1,21 +1,60 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { BoardsState, Task } from "../types/index";
 import { apiFetch } from "../utils/api";
+import type { RootState } from "./index";
+
+type ApiBoard = { _id: string; title: string };
+type ApiList = { _id: string; title: string; boardId: string };
+type ApiTask = {
+  _id: string;
+  title: string;
+  description?: string;
+  priority?: Task["priority"];
+  dueDate?: string;
+  assignee?: string;
+  labels?: string[];
+  checklist?: Task["checklist"];
+  progress?: number;
+  status?: string;
+  autoDone?: boolean;
+  listId: string;
+  createdAt?: number;
+};
+
+type LoadBoardDataResponse = { board: ApiBoard; lists: ApiList[]; tasks: ApiTask[] };
+type AddBoardResponse = { board: ApiBoard; lists: ApiList[] };
+type DeleteTaskResponse = { taskId: string };
+
+const normalizeApiTask = (task: ApiTask): Task => ({
+  id: task._id,
+  title: task.title,
+  description: task.description ?? "",
+  priority: task.priority ?? "medium",
+  dueDate: task.dueDate,
+  assignee: task.assignee,
+  labels: task.labels ?? [],
+  checklist: task.checklist ?? [],
+  progress: task.progress ?? 0,
+  status: task.status ?? "todo",
+  autoDone: task.autoDone ?? false,
+  listId: task.listId,
+  createdAt: task.createdAt ?? Date.now(),
+});
 
 export const fetchBoards = createAsyncThunk("boards/fetchAll", async (_, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch("/boards", { token, auth: true });
 });
 
 export const loadBoardData = createAsyncThunk("boards/loadData", async (id: string, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch(`/boards/${id}`, { token, auth: true });
 });
 
 export const addBoardDB = createAsyncThunk("boards/add", async (title: string, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch("/boards", {
     method: "POST",
@@ -26,7 +65,7 @@ export const addBoardDB = createAsyncThunk("boards/add", async (title: string, t
 });
 
 export const addTaskDB = createAsyncThunk("tasks/add", async ({ listId, title, order }: { listId: string; title: string; order: number }, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch("/tasks", {
     method: "POST",
@@ -36,8 +75,8 @@ export const addTaskDB = createAsyncThunk("tasks/add", async ({ listId, title, o
   });
 });
 
-export const updateTaskDB = createAsyncThunk("tasks/update", async ({ id, updates }: { id: string; updates: any }, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+export const updateTaskDB = createAsyncThunk("tasks/update", async ({ id, updates }: { id: string; updates: Partial<Task> }, thunkAPI) => {
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch(`/tasks/${id}`, {
     method: "PUT",
@@ -48,7 +87,7 @@ export const updateTaskDB = createAsyncThunk("tasks/update", async ({ id, update
 });
 
 export const deleteTaskDB = createAsyncThunk("tasks/delete", async (id: string, thunkAPI) => {
-  const state = thunkAPI.getState() as any;
+  const state = thunkAPI.getState() as RootState;
   const token = state.auth.token;
   return await apiFetch(`/tasks/${id}`, {
     method: "DELETE",
@@ -150,7 +189,8 @@ const boardSlice = createSlice({
         updates.progress = progress;
 
         // Revert to Todo if new work added to a completed task
-        if (total > task.checklist.length && (task.status === "done" || task.progress === 100) && listId) {
+        const existingChecklistLength = (task.checklist ?? []).length;
+        if (total > existingChecklistLength && (task.status === "done" || task.progress === 100) && listId) {
           const currentList = state.lists[listId];
           if (currentList && currentList.title.toLowerCase() === "done") {
             const board = state.boards[currentList.boardId];
@@ -169,7 +209,9 @@ const boardSlice = createSlice({
 
       const currentProgress = updates.progress !== undefined ? updates.progress : task.progress;
       const currentAutoDone = updates.autoDone !== undefined ? updates.autoDone : task.autoDone;
-      const isComplete = currentProgress === 100 && (updates.checklist ? updates.checklist.length > 0 : task.checklist.length > 0);
+      const isComplete =
+        currentProgress === 100 &&
+        ((updates.checklist ? updates.checklist.length : (task.checklist ?? []).length) > 0);
 
       if (isComplete && currentAutoDone && listId) {
         const currentList = state.lists[listId];
@@ -274,23 +316,23 @@ const boardSlice = createSlice({
       }
       delete state.tasks[taskId];
     },
-    setSearch: (state, action) => {
+    setSearch: (state, action: PayloadAction<string>) => {
       state.filters.search = action.payload;
     },
 
-    setPriorityFilter: (state, action) => {
+    setPriorityFilter: (state, action: PayloadAction<string[]>) => {
       state.filters.priority = action.payload;
     },
 
-    setLabelFilter: (state, action) => {
+    setLabelFilter: (state, action: PayloadAction<string[]>) => {
       state.filters.labelIds = action.payload;
     },
 
-    setStatusFilter: (state, action) => {
+    setStatusFilter: (state, action: PayloadAction<string>) => {
       state.filters.status = action.payload;
     },
 
-    setDueFilter: (state, action) => {
+    setDueFilter: (state, action: PayloadAction<BoardsState["filters"]["due"]>) => {
       state.filters.due = action.payload;
     },
 
@@ -303,14 +345,15 @@ const boardSlice = createSlice({
         due: "all",
       };
     },
-    hydrateState: (state, action: PayloadAction<any>) => {
+    hydrateState: (state, action: PayloadAction<Partial<BoardsState>>) => {
       return { ...state, ...action.payload };
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchBoards.fulfilled, (state, action) => {
-        action.payload.forEach((board: any) => {
+        const boards = action.payload as ApiBoard[];
+        boards.forEach((board) => {
           state.boards[board._id] = {
             id: board._id,
             title: board.title,
@@ -319,36 +362,44 @@ const boardSlice = createSlice({
         });
       })
       .addCase(loadBoardData.fulfilled, (state, action) => {
-        const { board, lists, tasks } = action.payload;
+        const { board, lists, tasks } = action.payload as LoadBoardDataResponse;
         state.boards[board._id] = {
           id: board._id,
           title: board.title,
-          listIds: lists.map((l: any) => l._id),
+          listIds: lists.map((l) => l._id),
         };
-        lists.forEach((list: any) => {
+        lists.forEach((list) => {
           state.lists[list._id] = {
             id: list._id,
             title: list.title,
             boardId: board._id,
-            taskIds: tasks.filter((t: any) => t.listId === list._id).map((t: any) => t._id),
+            taskIds: tasks.filter((t) => t.listId === list._id).map((t) => t._id),
           };
         });
-        tasks.forEach((task: any) => {
+        tasks.forEach((task) => {
           state.tasks[task._id] = {
             ...task,
             id: task._id,
+            priority: task.priority ?? "medium",
+            labels: task.labels ?? [],
+            checklist: task.checklist ?? [],
+            progress: task.progress ?? 0,
+            status: task.status ?? "todo",
+            autoDone: task.autoDone ?? false,
+            description: task.description ?? "",
+            createdAt: task.createdAt ?? Date.now(),
           };
         });
         state.selectedBoardId = board._id;
       })
       .addCase(addBoardDB.fulfilled, (state, action) => {
-        const { board, lists } = action.payload;
+        const { board, lists } = action.payload as AddBoardResponse;
         state.boards[board._id] = {
           id: board._id,
           title: board.title,
-          listIds: lists.map((l: any) => l._id),
+          listIds: lists.map((l) => l._id),
         };
-        lists.forEach((list: any) => {
+        lists.forEach((list) => {
           state.lists[list._id] = {
             id: list._id,
             title: list.title,
@@ -358,18 +409,18 @@ const boardSlice = createSlice({
         });
       })
       .addCase(addTaskDB.fulfilled, (state, action) => {
-        const task = action.payload;
-        state.tasks[task._id] = { ...task, id: task._id };
+        const task = action.payload as ApiTask;
+        state.tasks[task._id] = normalizeApiTask(task);
         if (state.lists[task.listId]) {
           state.lists[task.listId].taskIds.push(task._id);
         }
       })
       .addCase(updateTaskDB.fulfilled, (state, action) => {
-        const task = action.payload;
-        state.tasks[task._id] = { ...task, id: task._id };
+        const task = action.payload as ApiTask;
+        state.tasks[task._id] = normalizeApiTask(task);
       })
       .addCase(deleteTaskDB.fulfilled, (state, action) => {
-        const { taskId } = action.payload;
+        const { taskId } = action.payload as DeleteTaskResponse;
         Object.values(state.lists).forEach(list => {
           list.taskIds = list.taskIds.filter(id => id !== taskId);
         });

@@ -14,7 +14,6 @@ function getAuthTokenFromStorage(): string | null {
 
 interface ApiOptions extends RequestInit {
   token?: string | null;
-  /** When true, sends Authorization using explicit token or taskcorner_state.auth.token */
   auth?: boolean;
 }
 
