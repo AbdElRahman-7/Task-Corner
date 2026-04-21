@@ -8,12 +8,12 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import React, { useState, memo } from "react";
 import TaskCard from "./TaskCard";
-import { List, Task } from "../../types/index";
-import { RootState } from "../../store/index";
-import { addTaskDB } from "../../store/boardSlice";
+import { List, Task } from "@appTypes/index";
+import { RootState } from "@store/index";
+import { addTaskDB } from "@store/boardSlice";
 import { toast } from "react-hot-toast";
-import { selectOrderedTasksByList } from "../../store/selectors";
-import type { AppDispatch } from "../../store/index";
+import { selectOrderedTasksByList } from "@store/selectors";
+import type { AppDispatch } from "@store/index";
 
 interface ListCardProps {
   id: string;

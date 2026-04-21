@@ -371,6 +371,11 @@
     margin-left: auto;
   }
 
+  &__assigneeStack {
+    display: flex;
+    align-items: center;
+  }
+
   &__avatar {
     width: 28px;
     height: 28px;
@@ -391,6 +396,29 @@
     &:hover {
       transform: scale(1.1) translateY(-2px);
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  &__assigneeStack &__avatar {
+    margin-left: -8px;
+  }
+
+  &__assigneeStack &__avatar:first-child {
+    margin-left: 0;
+  }
+
+  &__avatar--more {
+    background: rgba($brand-primary, 0.08);
+    color: $brand-primary;
+    border: 2px solid $light-surface;
+    box-shadow: none;
+    font-size: 0.7rem;
+    font-weight: 1000;
+
+    @include dark {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-color: $dark-surface-2;
     }
   }
 

@@ -7,31 +7,36 @@ import { loginStart, loginSuccess, loginFailure } from "@store/authSlice";
 import { RootState } from "@store/index";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import { apiFetch } from "../../utils/api";
+import { apiFetch } from "@utils/api";
 
-export default function LoginPage() {
+export default function SignupPage() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading } = useSelector((state: RootState) => state.auth);
 
-  const handleLogin = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(loginStart());
 
     try {
-      const data = await apiFetch("/auth/login", {
+      const data = await apiFetch("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        body: JSON.stringify({
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
-      if (!data?.token) throw new Error("Login succeeded but no token returned.");
+      if (!data?.token) throw new Error("Signup succeeded but no token returned.");
 
       dispatch(loginSuccess({ user: data, token: data.token as string }));
-      toast.success("Login successful!");
+      toast.success("Account created successfully!");
       router.push("/");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Login failed";
+      const message = err instanceof Error ? err.message : "Signup failed";
       dispatch(loginFailure(message));
       toast.error(message);
     }
@@ -39,13 +44,25 @@ export default function LoginPage() {
 
   return (
     <div className="authContainer">
-      <div className="authCard animate-fadeIn">
+      <div className="authCard">
         <div className="authHeader">
-          <h1>Welcome Back</h1>
-          <p>Login to manage your boards and tasks</p>
+          <h1>Join TaskCorner</h1>
+          <p>Organize your work with ease</p>
         </div>
-        
-        <form onSubmit={handleLogin} className="authForm">
+
+        <form onSubmit={handleSignup} className="authForm">
+          <div className="inputGroup">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="Your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="inputGroup">
             <label htmlFor="email">Email Address</label>
             <input
@@ -57,7 +74,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <div className="inputGroup">
             <label htmlFor="password">Password</label>
             <input
@@ -69,15 +86,15 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <button type="submit" className="authSubmitBtn" disabled={loading}>
-            {loading ? "Logging in..." : "Sign In"}
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
-        
+
         <div className="authFooter">
-          <span>Don&apos;t have an account? </span>
-          <Link href="/signup">Sign Up</Link>
+          <span>Already have an account? </span>
+          <Link href="/main/auth/login">Log In</Link>
         </div>
       </div>
     </div>

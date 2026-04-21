@@ -6,14 +6,20 @@ const boardSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  members: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    default: [],
-  },
+  members: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      role: { type: String, enum: ["viewer", "editor"], default: "viewer" }
+    }
+  ],
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
   },
 }, { timestamps: true });
 

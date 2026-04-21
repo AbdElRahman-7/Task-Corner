@@ -1,7 +1,7 @@
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import CustomSelect from "./CustomSelect";
-import { RootState } from "../../store/index";
+import { RootState } from "@store/index";
 import {
   setSearch,
   setPriorityFilter,
@@ -9,10 +9,10 @@ import {
   setStatusFilter,
   setDueFilter,
   clearFilters,
-} from "../../store/boardSlice";
+} from "@store/boardSlice";
 import { toast } from "react-hot-toast";
 import { useMemo } from "react";
-import type { AppDispatch } from "../../store/index";
+import type { AppDispatch } from "@store/index";
 
 const Filters = ({ compact = false }: { compact?: boolean }) => {
   const dispatch = useDispatch<AppDispatch>();

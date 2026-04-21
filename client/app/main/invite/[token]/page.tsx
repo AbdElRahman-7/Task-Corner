@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../store/index";
-import { apiFetch } from "../../../utils/api";
+import { RootState } from "@store/index";
+import { apiFetch } from "@utils/api";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { loadState } from "../../../store/localStorage";
+import { loadState } from "@store/localStorage";
 import styles from "./invite.module.scss";
 
 export default function InvitePage() {
@@ -19,9 +19,9 @@ export default function InvitePage() {
   const router = useRouter();
   const authTokenFromRedux = useSelector((state: RootState) => state.auth.token);
   const authToken = authTokenFromRedux ?? loadState()?.auth?.token ?? null;
-  
+
   const [loading, setLoading] = useState(true);
-  const [invite, setInvite] = useState<{ email?: string } | null>(null);
+  const [invite, setInvite] = useState<{ email?: string, name?: string, boardId?: string, workspaceId?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function InvitePage() {
     }
     if (!authToken) {
       toast.error("Please log in or sign up to accept this invitation.");
-      router.push("/login");
+      router.push("/main/auth/login");
       return;
     }
 
@@ -55,9 +55,10 @@ export default function InvitePage() {
         token: authToken,
         auth: true,
       });
-      
+
       toast.success(response.message || "Successfully joined!");
-      router.push(`/board/${response.boardId}`);
+      const redirectPath = response.type === 'workspace' ? '/' : `/main/board/${response.id}`;
+      router.push(redirectPath);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to accept invite.");
     }
@@ -84,7 +85,7 @@ export default function InvitePage() {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className={styles.page}>
@@ -99,20 +100,24 @@ export default function InvitePage() {
     );
   }
 
+  const inviteType = invite?.workspaceId ? "workspace" : "board";
+
   return (
     <div className={styles.page}>
       <div className={`${styles.card} ${styles.cardLarge}`}>
         <div className={styles.icon}>
           💌
         </div>
-        <h1 className={styles.title}>You&apos;ve been invited!</h1>
+        <h1 className={styles.title}>
+          {invite?.name ? `Hey ${invite.name}, you're invited!` : "You've been invited!"}
+        </h1>
         <p className={styles.description}>
-          You have been invited to collaborate on a workspace.
-          <br/><br/>
-          Invitation intended for:<br/>
+          You have been invited to collaborate on a {inviteType}.
+          <br /><br />
+          Invitation intended for:<br />
           <strong className={styles.email}>{invite?.email}</strong>
         </p>
-        
+
         {!authToken && (
           <div className={styles.hintBox}>
             <p className={styles.hintText}>
@@ -121,7 +126,7 @@ export default function InvitePage() {
           </div>
         )}
 
-        <button 
+        <button
           onClick={handleAccept}
           className={styles.acceptBtn}
         >

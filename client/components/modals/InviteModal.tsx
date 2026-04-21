@@ -1,113 +1,370 @@
-import React, { useState } from 'react';
-import { apiFetch } from '../../utils/api';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { loadState } from '../../store/localStorage';
+"use client";
+import React, { useState, useEffect } from "react";
+import { apiFetch } from "@utils/api";
+import { useSelector } from "react-redux";
+import { RootState } from "@store/index";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { User, Board } from "@appTypes/index";
+import { Search, UserPlus, Shield, ShieldCheck, Mail, CheckCircle, Globe } from "lucide-react";
+
+interface UserWithSelection extends User {
+  selected?: boolean;
+  role?: "viewer" | "editor";
+}
 
 interface InviteModalProps {
-  boardId: string;
+  boardId?: string;
+  workspaceId?: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function InviteModal({ boardId, isOpen, onClose }: InviteModalProps) {
-  const [email, setEmail] = useState('');
+export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: InviteModalProps) {
+  const [users, setUsers] = useState<UserWithSelection[]>([]);
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [inviteLink, setInviteLink] = useState('');
-  const router = useRouter();
-  const tokenFromRedux = useSelector((state: RootState) => state.auth.token);
-  const token = tokenFromRedux ?? loadState()?.auth?.token ?? null;
+  const [sending, setSending] = useState(false);
 
-  if (!isOpen) return null;
+  const token = useSelector((state: RootState) => state.auth.token);
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    if (!token) {
-      toast.error("Please log in to invite members.");
-      onClose();
-      router.push("/login");
-      return;
+  useEffect(() => {
+    if (isOpen && token) {
+      fetchData();
     }
+  }, [isOpen, token]);
 
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch('/invite', {
-        method: 'POST',
-        body: JSON.stringify({ email, boardId }),
-        token,
-        auth: true,
-      });
-
-      if (response && response.link) {
-        setInviteLink(response.link);
-        toast.success(response.message || 'Invite generated!');
-      } else {
-        toast.error('Failed to generate invite');
+      // Fetch Users
+      const usersRes = await apiFetch("/admin/users", { token, auth: true });
+      if (usersRes.success) {
+        setUsers(usersRes.users.map((u: any) => ({ ...u, selected: false, role: "viewer" })));
       }
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Error generating invite');
+
+      // Fetch Boards
+      const boardsRes = await apiFetch("/boards?status=active", { token, auth: true });
+      setBoards(boardsRes);
+      
+      if (boardId) {
+        setSelectedBoardId(boardId);
+      } else if (boardsRes.length > 0) {
+        setSelectedBoardId(boardsRes[0]._id || boardsRes[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching data for invite:", error);
+      toast.error("Failed to load users or boards");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(inviteLink);
-    toast.success('Link copied to clipboard!');
+  const toggleUserSelection = (userId: string) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        (u._id || u.id) === userId ? { ...u, selected: !u.selected } : u
+      )
+    );
   };
 
+  const updateUserRole = (userId: string, role: "viewer" | "editor") => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        (u._id || u.id) === userId ? { ...u, role } : u
+      )
+    );
+  };
+
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualName, setManualName] = useState("");
+  const [manualRole, setManualRole] = useState<"viewer" | "editor">("viewer");
+
+  const handleBulkInvite = async () => {
+    const selectedUsers = users.filter((u) => u.selected);
+    const hasManual = manualEmail.trim() !== "";
+
+    if (selectedUsers.length === 0 && !hasManual) {
+      toast.error("Please select a user or enter an email");
+      return;
+    }
+    if (!selectedBoardId && !workspaceId) {
+      toast.error("Please select a board or workspace");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const invites: { 
+        email: string; 
+        name?: string; 
+        boardId?: string; 
+        workspaceId?: string; 
+        role?: "viewer" | "editor" 
+      }[] = selectedUsers.map((u) => ({
+        email: u.email,
+        name: u.username,
+        boardId: selectedBoardId || undefined,
+        workspaceId: workspaceId || undefined,
+        role: u.role,
+      }));
+
+      if (hasManual) {
+        invites.push({
+          email: manualEmail,
+          name: manualName,
+          boardId: selectedBoardId || undefined,
+          workspaceId: workspaceId || undefined,
+          role: manualRole,
+        });
+      }
+
+      await Promise.all(invites.map(payload => 
+        apiFetch("/invite", {
+          method: "POST",
+          body: JSON.stringify(payload),
+          token,
+          auth: true,
+        })
+      ));
+
+      toast.success(`Successfully sent ${invites.length} invites!`);
+      setManualEmail("");
+      setManualName("");
+      onClose();
+    } catch (error) {
+      console.error("Bulk invite error:", error);
+      toast.error("Some invites failed to send");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedCount = users.filter((u) => u.selected).length;
+
   return (
-    <div className="backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div className="modal modal--small" onClick={(e) => e.stopPropagation()}>
-        <button className="modalClose" onClick={onClose}>✕</button>
-        <div className="modalHeader">
-          <h2 className="modalTitle">Invite to Workspace</h2>
-          <p className="modalSubtitle">Share this workspace with others.</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div 
+        className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideInUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white dark:from-zinc-800 dark:to-zinc-900">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <UserPlus className="text-blue-500" />
+              {boardId || selectedBoardId ? "Invite to Board" : "Invite to Workspace"}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {boardId || selectedBoardId 
+                ? "Select users and assign roles for your board." 
+                : "Add new members to your workspace."}
+            </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-full transition-colors"
+          >
+            ✕
+          </button>
         </div>
-        
-        <div className="modalBody">
-          {!inviteLink ? (
-            <form onSubmit={handleInvite}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>User Email</label>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Panel: User Selection */}
+          <div className="flex-1 flex flex-col border-r border-gray-100 dark:border-zinc-800">
+            <div className="p-4 bg-gray-50/50 dark:bg-zinc-800/30">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="friend@example.com"
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-                  required
+                  type="text"
+                  placeholder="Search users by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={onClose} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc', background: 'white' }}>Cancel</button>
-                <button type="submit" disabled={loading} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#007bff', color: 'white' }}>
-                  {loading ? 'Sending...' : 'Invite'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div>
-              <p>Invitation sent/created successfully!</p>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={inviteLink} 
-                  style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
-                />
-                <button onClick={handleCopy} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#28a745', color: 'white' }}>
-                  Copy
-                </button>
-              </div>
-              <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc', background: 'white' }}>Close</button>
               </div>
             </div>
-          )}
+
+            <div className="flex-1 overflow-y-auto p-2">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                   <p className="text-sm text-gray-400">Loading users...</p>
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 bg-white dark:bg-zinc-900 z-10">
+                    <tr className="text-xs uppercase text-gray-400 font-semibold border-b border-gray-100 dark:border-zinc-800">
+                      <th className="p-3 w-10">Select</th>
+                      <th className="p-3">User</th>
+                      <th className="p-3">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-zinc-800/50">
+                    {filteredUsers.map((user) => (
+                      <tr 
+                        key={user._id || user.id}
+                        className={`group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors ${user.selected ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                      >
+                        <td className="p-3">
+                          <input
+                            type="checkbox"
+                            checked={user.selected}
+                            onChange={() => toggleUserSelection(user._id || user.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold uppercase ring-2 ring-white dark:ring-zinc-800">
+                              {user.username.substring(0, 2)}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-gray-100">{user.username}</div>
+                              <div className="text-xs text-gray-500 flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <select
+                            disabled={!user.selected}
+                            value={user.role}
+                            onChange={(e) => updateUserRole((user._id || user.id), e.target.value as any)}
+                            className={`text-xs p-1.5 rounded border transition-all outline-none ${
+                                !user.selected 
+                                ? 'bg-gray-100 text-gray-400' 
+                                : 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 cursor-pointer hover:border-blue-500'
+                            }`}
+                          >
+                            <option value="viewer">Viewer</option>
+                            <option value="editor">Editor</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              
+              <div className="mt-4 p-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/30 dark:bg-zinc-800/20">
+                <h4 className="text-xs font-bold uppercase text-gray-500 mb-4 tracking-wider flex items-center gap-2">
+                  <UserPlus className="w-3 h-3" />
+                  Invite someone new
+                </h4>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <input
+                    type="text"
+                    placeholder="Full Name (optional)"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={manualRole}
+                    onChange={(e) => setManualRole(e.target.value as any)}
+                    className="flex-1 px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  >
+                    <option value="viewer">Invite as Viewer</option>
+                    <option value="editor">Invite as Editor</option>
+                  </select>
+                  <div className="text-[10px] text-gray-400 italic max-w-[200px]">
+                    This person will receive an invitation link if they aren't registered yet.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel: Settings */}
+          <div className="w-80 bg-gray-50 dark:bg-zinc-800/50 p-6 flex flex-col border-l border-gray-100 dark:border-zinc-800">
+            <div className="mb-8">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-blue-500" />
+                Target Board
+              </label>
+              <select
+                value={selectedBoardId}
+                onChange={(e) => setSelectedBoardId(e.target.value)}
+                className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+              >
+                <option value="">Select a board...</option>
+                {boards.map((board) => (
+                  <option key={board._id || board.id} value={board._id || board.id}>
+                    {board.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Selected Summary
+              </h3>
+              <div className="space-y-3">
+                <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">{selectedCount}</div>
+                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">Users to Invite</div>
+                </div>
+                
+                {selectedCount > 0 && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                    <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed italic">
+                      "Selected users will receive an invitation link via email to join the board as {users.filter(u=>u.selected).every(u=>u.role==='viewer') ? 'viewers' : 'their specified roles'}."
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-3">
+              <button
+                onClick={handleBulkInvite}
+                disabled={sending || selectedCount === 0 || !selectedBoardId}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                {sending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Send {selectedCount || ''} Invite{selectedCount !== 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full py-3 px-4 bg-transparent text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

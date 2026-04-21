@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { store } from "../store";
 import { Toaster } from "react-hot-toast";
-import Header from "@components/Header/Header";
 import { ThemeProvider } from "@components/ThemeProvider/ThemeProvider";
-import { loadState } from "../store/localStorage";
-import { hydrateState } from "../store/boardSlice";
+import { loadState } from "@store/localStorage";
+import { hydrateState } from "@store/boardSlice";
+import Header from "@components/Header/Header";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -25,9 +25,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           containerStyle={{ zIndex: 99999 }}
         />
         <Header />
-        <main>
-          {children}
-        </main>
+        <main>{children}</main>
       </ThemeProvider>
     </Provider>
   );

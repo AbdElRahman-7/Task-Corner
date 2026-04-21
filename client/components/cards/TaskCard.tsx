@@ -1,9 +1,9 @@
 import React, { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Task } from "../../types/index";
+import { Task } from "@appTypes/index";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store/index";
+import { RootState } from "@store/index";
 import { 
   Clock,
   CheckSquare,
@@ -37,6 +37,13 @@ const TaskCard = memo(({ id, task, listId, onClick, isOverlay }: TaskCardProps) 
   const totalItems = checklist.length;
 
   const labels = task.labels || [];
+  const assignments = task.assignments ?? [];
+  const assignedLabels = assignments
+    .map((a) => (typeof a.user === "string" ? a.user : a.user?.username || a.user?.email || a.user?._id))
+    .filter(Boolean) as string[];
+  const legacyAssignee = task.assignee ? [task.assignee] : [];
+  const displayAssignees = assignedLabels.length > 0 ? assignedLabels : legacyAssignee;
+  const maxAvatars = 3;
 
   return (
     <div
@@ -96,10 +103,26 @@ const TaskCard = memo(({ id, task, listId, onClick, isOverlay }: TaskCardProps) 
           </div>
         )}
 
-        {task.assignee && (
-          <div className="taskCard__assignee" title={`Assignee: ${task.assignee}`}>
-            <div className="taskCard__avatar">
-              {task.assignee.charAt(0).toUpperCase()}
+        {displayAssignees.length > 0 && (
+          <div
+            className="taskCard__assignee"
+            title={
+              assignments.length > 0
+                ? `Assigned: ${displayAssignees.join(", ")}`
+                : `Assignee: ${displayAssignees.join(", ")}`
+            }
+          >
+            <div className="taskCard__assigneeStack">
+              {displayAssignees.slice(0, maxAvatars).map((name, idx) => (
+                <div key={`${name}-${idx}`} className="taskCard__avatar">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              ))}
+              {displayAssignees.length > maxAvatars && (
+                <div className="taskCard__avatar taskCard__avatar--more">
+                  +{displayAssignees.length - maxAvatars}
+                </div>
+              )}
             </div>
           </div>
         )}

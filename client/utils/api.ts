@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://task-corner.onrender.com/api";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 
 function getAuthTokenFromStorage(): string | null {
   if (typeof window === "undefined") return null;
