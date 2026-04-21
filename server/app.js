@@ -4,6 +4,8 @@ const authRoutes = require("./routes/auth.routes.js");
 const boardRoutes = require("./routes/board.routes.js");
 const taskRoutes = require("./routes/task.routes.js");
 const inviteRoutes = require("./routes/invite.routes.js");
+const adminRoutes = require("./routes/admin.routes");
+
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/invite", inviteRoutes);
+app.use("/api/admin", adminRoutes);
+
 
 // Catch-all for undefined API routes to prevent HTML 404s
 app.use("/api", (req, res) => {

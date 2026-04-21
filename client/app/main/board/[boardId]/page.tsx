@@ -1,13 +1,13 @@
 "use client";
 import { use, useState, useCallback, useEffect } from "react";
-import { 
-  DndContext, 
-  closestCorners, 
-  PointerSensor, 
-  useSensor, 
-  useSensors, 
-  DragEndEvent, 
-  DragStartEvent, 
+import {
+  DndContext,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
   DragOverlay,
   defaultDropAnimationSideEffects,
   DragOverEvent
@@ -19,14 +19,16 @@ import {
 } from "@dnd-kit/sortable";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@store/index";
-import { addCustomList, moveTask, reorderLists, loadBoardData } from "@store/boardSlice";
+import { addCustomList, moveTask, reorderLists, loadBoardData, moveTaskDB } from "@store/boardSlice";
 import Link from "next/link";
 import ListCard from "@components/cards/ListCard";
 import TaskCard from "@components/cards/TaskCard";
 import TaskModal from "@components/modals/TaskModal";
-import InviteModal from "@components/modals/InviteModal";
-import { Task } from "../../../types/index";
+import { Task } from "@appTypes/index";
 import { toast } from "react-hot-toast";
+import InviteModal from "@components/modals/InviteModal";
+import BoardMembersSideBar from "@components/Board/BoardMembersSideBar";
+import { Users } from "lucide-react";
 import type { AppDispatch } from "@store/index";
 
 export default function BoardPage({
@@ -45,16 +47,23 @@ export default function BoardPage({
   const board = useSelector((state: RootState) => state.boards.boards[boardId]);
   const lists = useSelector((state: RootState) => state.boards.lists);
   const tasks = useSelector((state: RootState) => state.boards.tasks);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"task" | "list" | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   useEffect(() => {
     if (boardId) {
       dispatch(loadBoardData(boardId));
     }
   }, [boardId, dispatch]);
+
+  const isEditor = board?.owner === currentUser?._id || board?.members?.some(m => {
+    const mUserId = typeof m.user === 'string' ? m.user : m.user?._id;
+    return mUserId === currentUser?._id && m.role === 'editor';
+  });
 
   const handleTaskClick = useCallback((task: Task, listId: string) => {
     setSelectedTask(task);
@@ -71,6 +80,10 @@ export default function BoardPage({
   }
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (!isEditor) {
+      toast.error("You don't have permission to move items on this board");
+      return;
+    }
     setActiveId(event.active.id as string);
     setActiveType(event.active.data.current?.type);
   };
@@ -85,8 +98,8 @@ export default function BoardPage({
     if (activeType === "task") {
       const activeTaskId = active.id as string;
       const fromListId = active.data.current?.listId;
-      
-      const toListId = over.data.current?.listId || 
+
+      const toListId = over.data.current?.listId ||
         (overType === "list" ? over.id.toString().replace("list-drop-", "") : undefined);
 
       if (!fromListId || !toListId) return;
@@ -116,8 +129,8 @@ export default function BoardPage({
     if (activeType === "task") {
       const activeTaskId = active.id as string;
       const fromListId = active.data.current?.listId;
-      
-      const toListId = over.data.current?.listId || 
+
+      const toListId = over.data.current?.listId ||
         (overType === "list" ? over.id.toString().replace("list-drop-", "") : undefined);
 
       if (!fromListId || !toListId) return;
@@ -133,12 +146,13 @@ export default function BoardPage({
         newIndex = toList.taskIds.length;
       }
       dispatch(moveTask({ taskId: activeTaskId, fromListId, toListId: toListIdStr, newIndex }));
+      dispatch(moveTaskDB({ taskId: activeTaskId, toListId: toListIdStr, newIndex }));
       toast.success("Task moved!");
-      
+
     } else if (activeType === "list") {
       const activeId = active.id as string;
       const targetListId = over.data.current?.listId || (over.id as string);
-      
+
       const oldIndex = board.listIds.indexOf(activeId);
       const newIndex = board.listIds.indexOf(targetListId);
 
@@ -150,6 +164,10 @@ export default function BoardPage({
   };
 
   const handleAddCustomList = () => {
+    if (!isEditor) {
+      toast.error("You don't have permission to add lists");
+      return;
+    }
     const title = newListTitle.trim();
     if (!title) return;
     dispatch(addCustomList({ boardId, title }));
@@ -174,21 +192,46 @@ export default function BoardPage({
           </Link>
 
           <h1 className="boardTitle">{board.title}</h1>
-          <button 
-            onClick={() => setIsInviteOpen(true)} 
-            style={{ 
-              marginLeft: 'auto', 
-              padding: '8px 16px', 
-              borderRadius: '8px', 
-              background: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              fontWeight: 'bold', 
-              cursor: 'pointer' 
-            }}
-          >
-            + Invite Member
-          </button>
+          <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
+            <button
+              onClick={() => setIsMembersOpen(true)}
+              className="membersToggleBtn"
+              title="Board Members"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Users size={16} />
+              Members ({board.members.length + 1})
+            </button>
+
+            {isEditor && (
+              <button
+                onClick={() => setIsInviteOpen(true)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                + Invite
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="boardContent">
@@ -201,53 +244,61 @@ export default function BoardPage({
               if (!listData) return null;
               return (
                 <div key={listId} style={{ "--i": index } as React.CSSProperties}>
-                  <ListCard 
-                    id={listId} 
-                    list={listData} 
+                  <ListCard
+                    id={listId}
+                    list={listData}
                     index={index}
-                    onTaskClick={(task) => handleTaskClick(task, listId)} 
+                    onTaskClick={(task) => handleTaskClick(task, listId)}
                   />
                 </div>
               );
             })}
           </SortableContext>
 
-          <div className="addListPanel" style={{ "--i": board.listIds.length } as React.CSSProperties}>
-            <input
-              type="text"
-              placeholder="Add list..."
-              value={newListTitle}
-              onChange={(e) => setNewListTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddCustomList();
-              }}
-              className="addListPanel__input"
-            />
-            <button
-              onClick={handleAddCustomList}
-              className="addListPanel__button"
-            >
-              + Add List
-            </button>
-          </div>
+          {isEditor && (
+            <div className="addListPanel" style={{ "--i": board.listIds.length } as React.CSSProperties}>
+              <input
+                type="text"
+                placeholder="Add list..."
+                value={newListTitle}
+                onChange={(e) => setNewListTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddCustomList();
+                }}
+                className="addListPanel__input"
+              />
+              <button
+                onClick={handleAddCustomList}
+                className="addListPanel__button"
+              >
+                + Add List
+              </button>
+            </div>
+          )}
         </div>
 
         {selectedTask && selectedListId && (
-          <TaskModal 
-            taskId={selectedTask.id} 
+          <TaskModal
+            taskId={selectedTask.id}
             listId={selectedListId}
-            isOpen={!!selectedTask} 
+            isOpen={!!selectedTask}
             onClose={() => {
               setSelectedTask(null);
               setSelectedListId(null);
-            }} 
+            }}
           />
         )}
 
-        <InviteModal 
-          boardId={boardId} 
-          isOpen={isInviteOpen} 
-          onClose={() => setIsInviteOpen(false)} 
+        <InviteModal
+          boardId={boardId as string}
+          isOpen={isInviteOpen}
+          onClose={() => setIsInviteOpen(false)}
+        />
+
+        <BoardMembersSideBar
+          boardId={boardId as string}
+          isOpen={isMembersOpen}
+          onClose={() => setIsMembersOpen(false)}
         />
 
         <DragOverlay dropAnimation={{
@@ -260,18 +311,18 @@ export default function BoardPage({
           }),
         }}>
           {activeId && activeType === "task" ? (
-            <TaskCard 
-              id={activeId} 
-              task={tasks[activeId]} 
+            <TaskCard
+              id={activeId}
+              task={tasks[activeId]}
               listId=""
-              onClick={() => {}} 
+              onClick={() => { }}
               isOverlay
             />
           ) : activeId && activeType === "list" ? (
-            <ListCard 
-              id={activeId} 
-              list={lists[activeId]} 
-              onTaskClick={() => {}} 
+            <ListCard
+              id={activeId}
+              list={lists[activeId]}
+              onTaskClick={() => { }}
               isOverlay
             />
           ) : null}

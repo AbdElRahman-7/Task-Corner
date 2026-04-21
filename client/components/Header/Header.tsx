@@ -5,19 +5,20 @@ import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@store/index";
 import { logout } from "@store/authSlice";
-import { LogOut } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Filters from "../Filters/Filters";
 import ThemeToggle from "@components/ThemeProvider/ThemeToggle";
 import type { AppDispatch } from "@store/index";
+import { usePathname } from "next/navigation";
+import { LogOut, Users } from "lucide-react";
 
 const Header = () => {
   const { token } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -25,6 +26,8 @@ const Header = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
   };
+
+  const isAuthPage = pathname?.includes("/auth/") || pathname === "/login" || pathname === "/signup";
 
   return (
     <header className="header">
@@ -44,10 +47,15 @@ const Header = () => {
       </div>
 
       <div className="header__center">
-        <Filters compact={true} />
+        {!isAuthPage && <Filters compact={true} />}
       </div>
 
       <div className="header__right">
+        {mounted && token && (
+          <Link href="/main/admin/users" title="User Management">
+            <Users className="w-5 h-5" />
+          </Link>
+        )}
         <ThemeToggle />
         {mounted && token && (
           <button onClick={handleLogout} className="logoutBtn" title="Logout">

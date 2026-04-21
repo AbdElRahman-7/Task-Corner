@@ -1,13 +1,25 @@
 const Board = require("../models/board.model");
 const List = require("../models/list.model");
 const Task = require("../models/task.model");
+const User = require("../models/user.model");
+const Invite = require("../models/invite.model");
+const crypto = require("crypto");
 
-// @desc    Get all boards for user
+// @desc    Get boards (optionally filter by archived status)
 const getBoards = async (req, res) => {
   try {
-    const boards = await Board.find({
-      $or: [{ user: req.user._id }, { members: req.user._id }],
-    });
+    const { status } = req.query;
+    const query = {
+      $or: [{ user: req.user._id }, { "members.user": req.user._id }],
+    };
+
+    if (status === "archived") {
+      query.isArchived = true;
+    } else if (status === "active") {
+      query.isArchived = false;
+    }
+
+    const boards = await Board.find(query);
     res.json(boards);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,8 +32,8 @@ const getBoardData = async (req, res) => {
     const { boardId } = req.params;
     const board = await Board.findOne({
       _id: boardId,
-      $or: [{ user: req.user._id }, { members: req.user._id }],
-    });
+      $or: [{ user: req.user._id }, { "members.user": req.user._id }],
+    }).populate("user", "username email").populate("members.user", "username email");
     
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
@@ -29,12 +41,17 @@ const getBoardData = async (req, res) => {
 
     const lists = await List.find({ boardId });
     const listIds = lists.map(l => l._id);
-    const tasks = await Task.find({ listId: { $in: listIds } });
+    const tasks = await Task.find({ listId: { $in: listIds } }).populate(
+      "assignments.user",
+      "username email"
+    );
+    const invites = await Invite.find({ boardId, status: "pending" });
 
     res.json({
       board,
       lists,
-      tasks
+      tasks,
+      invites
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -44,14 +61,48 @@ const getBoardData = async (req, res) => {
 // @desc    Create a new board
 const createBoard = async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, members } = req.body;
+    
+    // 1. Create board with the owner as the first member
     const board = await Board.create({
       title,
       user: req.user._id,
-      members: [req.user._id],
+      members: [{ user: req.user._id, role: "editor" }],
     });
 
-    // Create default lists for new board
+    // 2. Handle additional members
+    if (members && Array.isArray(members)) {
+      for (const m of members) {
+        if (!m.email) continue;
+        const normalizedEmail = m.email.toLowerCase();
+        
+        const user = await User.findOne({ email: normalizedEmail });
+        if (user) {
+          // If user exists, add them directly if they aren't already added
+          const isAlreadyMember = board.members.some(
+            (member) => member.user.toString() === user._id.toString()
+          );
+          if (!isAlreadyMember) {
+            board.members.push({ user: user._id, role: m.role || "viewer" });
+          }
+        } else {
+          // If user doesn't exist, create an invitation
+          const token = crypto.randomBytes(32).toString("hex");
+          await Invite.create({
+            email: normalizedEmail,
+            name: m.name,
+            boardId: board._id,
+            token,
+            role: m.role || "viewer",
+          });
+          // In a real app, you would send an email here with the link:
+          // `${process.env.CLIENT_URL}/invite/${token}`
+        }
+      }
+      await board.save();
+    }
+
+    // 3. Create default lists for the board
     const defaultLists = ["Todo", "In Progress", "Done"];
     const createdLists = await Promise.all(
       defaultLists.map((lt, index) => 
@@ -60,7 +111,7 @@ const createBoard = async (req, res) => {
     );
 
     res.status(201).json({
-      board,
+      board: await Board.findById(board._id).populate("members.user", "username email"),
       lists: createdLists,
       tasks: []
     });
@@ -72,8 +123,9 @@ const createBoard = async (req, res) => {
 // @desc    Delete board
 const deleteBoard = async (req, res) => {
   try {
-    const board = await Board.findOne({ _id: req.params.id, user: req.user._id });
-    if (!board) return res.status(404).json({ message: "Board not found" });
+    const { boardId } = req.params;
+    const board = await Board.findOne({ _id: boardId, user: req.user._id });
+    if (!board) return res.status(404).json({ message: "Board not found or unauthorized" });
 
     const lists = await List.find({ boardId: board._id });
     const listIds = lists.map(l => l._id);
@@ -82,7 +134,91 @@ const deleteBoard = async (req, res) => {
     await List.deleteMany({ boardId: board._id });
     await Board.deleteOne({ _id: board._id });
 
-    res.json({ message: "Board removed", boardId: req.params.id });
+    res.json({ message: "Board removed", boardId });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update board (title, members, archive)
+const updateBoard = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const updates = req.body;
+
+    console.log("Updating board:", boardId, "User:", req.user._id, "Updates:", updates);
+
+    // Only owner or editor can update board details
+    const board = await Board.findOneAndUpdate(
+      { 
+        _id: boardId, 
+        $or: [
+          { user: req.user._id }, 
+          { members: { $elemMatch: { user: req.user._id, role: "editor" } } }
+        ] 
+      }, 
+      { $set: updates },
+      { new: true }
+    ).populate("members.user", "username email");
+
+    if (!board) {
+      console.log("Board not found for update:", boardId);
+      return res.status(404).json({ message: "Board not found or unauthorized" });
+    }
+
+    res.json(board);
+  } catch (error) {
+    console.error("Board update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update member role
+const updateMemberRole = async (req, res) => {
+  try {
+    const { boardId, userId } = req.params;
+    const { role } = req.body;
+
+    if (!["viewer", "editor"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    // Only owner can change roles
+    const board = await Board.findOne({ _id: boardId, user: req.user._id });
+    if (!board) return res.status(403).json({ message: "Only owners can change roles" });
+
+    const memberIndex = board.members.findIndex(m => m.user.toString() === userId);
+    if (memberIndex === -1) return res.status(404).json({ message: "Member not found" });
+
+    board.members[memberIndex].role = role;
+    await board.save();
+
+    const updatedBoard = await Board.findById(boardId).populate("members.user", "username email");
+    res.json(updatedBoard);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Remove member from board
+const removeMember = async (req, res) => {
+  try {
+    const { boardId, userId } = req.params;
+
+    // Only owner can remove members
+    const board = await Board.findOne({ _id: boardId, user: req.user._id });
+    if (!board) return res.status(403).json({ message: "Only owners can remove members" });
+
+    // Cannot remove the owner
+    if (userId === board.user.toString()) {
+      return res.status(400).json({ message: "Cannot remove the board owner" });
+    }
+
+    board.members = board.members.filter(m => m.user.toString() !== userId);
+    await board.save();
+
+    const updatedBoard = await Board.findById(boardId).populate("members.user", "username email");
+    res.json(updatedBoard);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -92,5 +228,8 @@ module.exports = {
   getBoards,
   getBoardData,
   createBoard,
-  deleteBoard
+  deleteBoard,
+  updateBoard,
+  updateMemberRole,
+  removeMember
 };
