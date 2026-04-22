@@ -1,4 +1,5 @@
 @use 'variables' as *;
+
 // =========================================
 // Premium Motion Curves
 // =========================================
@@ -23,6 +24,28 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -37,34 +60,34 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes springIn {
-  0% { opacity: 0; transform: scale(0.8) translateY(50px); }
-  70% { opacity: 1; transform: scale(1.05) translateY(-10px); }
+  0%   { opacity: 0; transform: scale(0.8) translateY(50px); }
+  70%  { opacity: 1; transform: scale(1.05) translateY(-10px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50%       { transform: translateY(-10px); }
 }
 
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
-  50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+  50%       { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
 }
 
 @keyframes pulse-soft {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
+  50%       { transform: scale(1.05); opacity: 0.8; }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
+  0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
 @keyframes reveal {
   from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
 }
 
 @keyframes softFadeIn {
@@ -79,26 +102,50 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes bg-motion {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
 @keyframes glow-pulse-light {
   0%, 100% { box-shadow: 0 0 15px rgba($brand-primary, 0.1); }
-  50% { box-shadow: 0 0 30px rgba($brand-primary, 0.25); }
+  50%       { box-shadow: 0 0 30px rgba($brand-primary, 0.25); }
 }
 
 @keyframes logo-float {
   0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.05) rotate(-2deg); }
+  50%       { transform: scale(1.05) rotate(-2deg); }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes shimmer-skeleton {
+  100% { transform: translateX(100%); }
 }
 
 // =========================================
 // Animation Classes
 // =========================================
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s $ease-out-expo forwards;
+}
+
 .animate-fadeInUp {
   animation: fadeInUp 0.8s $ease-out-expo forwards;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.55s $ease-out-expo forwards;
 }
 
 .animate-springIn {
@@ -117,6 +164,11 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   animation: softFadeIn 0.8s $ease-out-expo forwards;
 }
 
+.animate-scaleIn {
+  animation: scaleIn 0.3s $ease-bounce forwards;
+  transform-origin: top right;
+}
+
 .animate-stagger {
   @for $i from 0 through 30 {
     &:nth-child(#{$i}) {
@@ -125,7 +177,7 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
-// Stagger logic for dynamic elements
+// CSS-variable-based stagger for dynamic lists
 [style*="--i"] {
   animation-delay: calc(var(--i) * 0.1s) !important;
 }
@@ -143,24 +195,4 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   &:hover {
     box-shadow: $glow-primary;
   }
-}
-
-// =========================================
-// Dropdown Animations
-// =========================================
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.animate-scaleIn {
-  animation: scaleIn 0.3s $ease-bounce forwards;
-  transform-origin: top right;
 }

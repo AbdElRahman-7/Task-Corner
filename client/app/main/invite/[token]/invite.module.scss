@@ -1,117 +1,256 @@
+@use '../styles/variables' as *;
+@use '../styles/mixins' as *;
+@use '../styles/animations' as *;
+
+// =========================================
+// Invite Page — fully responsive
+// =========================================
+
 .page {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: #f4f7f6;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 70% 20%, rgba($brand-secondary, 0.12), transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba($brand-primary, 0.08), transparent 50%),
+    $light-bg;
+
+  @include dark {
+    background:
+      radial-gradient(circle at 70% 20%, rgba($brand-secondary, 0.2), transparent 50%),
+      radial-gradient(circle at 20% 80%, rgba($brand-primary, 0.15), transparent 50%),
+      $dark-bg;
+  }
 }
 
 .card {
-  padding: 3rem;
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem;
   text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: $light-surface;
+  border-radius: $radius-xl;
+  border: 1px solid $light-border;
+  box-shadow: $shadow-premium, $highlight-3d;
+  animation: slideInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @include dark {
+    background: $dark-surface;
+    border-color: $dark-border;
+    box-shadow: $shadow-dark, $highlight-3d-dark;
+  }
+
+  @include mobile {
+    padding: 1.75rem 1.25rem;
+    border-radius: $radius-lg;
+  }
 }
 
 .cardLarge {
-  max-width: 450px;
-  width: 100%;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 480px;
+
+  @include mobile {
+    max-width: 100%;
+  }
 }
 
+// =========================================
+// Typography
+// =========================================
+
 .titleError {
-  color: #dc3545;
-  margin-bottom: 1rem;
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: $brand-danger;
+  margin-bottom: 0.75rem;
+
+  @include mobile { font-size: 1.5rem; }
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: $light-text-primary;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+
+  @include dark { color: $dark-text-primary; }
+
+  @include mobile { font-size: 1.35rem; }
 }
 
 .muted {
-  color: #666;
+  color: $light-text-muted;
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  @include dark { color: $dark-text-muted; }
 }
 
-.mb1 {
-  margin-bottom: 1rem;
-}
+.mb1 { margin-bottom: 1rem; }
+.mb2 { margin-bottom: 1.5rem; }
 
-.mb2 {
-  margin-bottom: 2rem;
-}
+// =========================================
+// Loading state
+// =========================================
 
 .loadingText {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #667eea;
+  font-size: 1rem;
+  font-weight: 700;
+  color: $brand-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: pulse-soft 1.6s ease-in-out infinite;
+
+  &::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba($brand-primary, 0.25);
+    border-top-color: $brand-primary;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
 }
 
-.homeBtn {
-  padding: 10px 20px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
+
+// =========================================
+// Icon
+// =========================================
 
 .icon {
-  width: 60px;
-  height: 60px;
-  background: #667eea;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, $brand-primary, $brand-secondary);
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
-  font-size: 24px;
+  font-size: 26px;
+  box-shadow: $glow-primary;
+  animation: float 4s ease-in-out infinite;
+
+  @include mobile {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
 }
 
-.title {
-  margin-bottom: 1rem;
-  color: #333;
-  font-size: 1.8rem;
-}
+// =========================================
+// Description & email
+// =========================================
 
 .description {
-  margin-bottom: 2rem;
-  color: #666;
-  line-height: 1.6;
+  font-size: 0.95rem;
+  color: $light-text-secondary;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+
+  @include dark { color: $dark-text-secondary; }
+
+  @include mobile { font-size: 0.9rem; }
 }
 
 .email {
-  color: #333;
-  font-size: 1.1rem;
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: $brand-primary;
+  letter-spacing: -0.01em;
+  word-break: break-all;
+
+  @include dark { color: lighten($brand-primary, 15%); }
 }
 
+// =========================================
+// Hint box
+// =========================================
+
 .hintBox {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba($brand-primary, 0.05);
+  border-radius: $radius-md;
+  border: 1px solid rgba($brand-primary, 0.12);
+  text-align: left;
+
+  @include dark {
+    background: rgba($brand-primary, 0.1);
+    border-color: rgba($brand-primary, 0.2);
+  }
 }
 
 .hintText {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.875rem;
+  color: $light-text-secondary;
   margin: 0;
+  line-height: 1.5;
+
+  @include dark { color: $dark-text-secondary; }
 }
+
+// =========================================
+// Buttons
+// =========================================
 
 .acceptBtn {
+  @include btn-primary;
   width: 100%;
-  padding: 14px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 900;
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, $brand-primary 0%, $brand-secondary 100%);
+  box-shadow: $glow-primary, $shadow-md;
+  letter-spacing: 0.01em;
+  transition: all $transition-bounce;
+
+  &:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+      0 15px 35px rgba($brand-primary, 0.4),
+      $glow-primary;
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: $shadow-sm;
+  }
+
+  @include mobile {
+    font-size: 0.95rem;
+    padding: 0.8rem 1.25rem;
+  }
 }
 
-.acceptBtn:hover {
-  transform: translateY(-2px);
+.homeBtn {
+  @include btn-primary;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.9rem;
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, $brand-primary 0%, $brand-secondary 100%);
+  box-shadow: $shadow-md;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $glow-primary, $shadow-md;
+  }
+
+  @include mobile {
+    width: 100%;
+    justify-content: center;
+  }
 }

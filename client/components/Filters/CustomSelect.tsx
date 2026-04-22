@@ -60,7 +60,7 @@ const CustomSelect = ({ options, value, onChange, placeholder = "Select...", cla
       </button>
 
       {isOpen && (
-        <div className="customSelect__menu animate-scaleIn">
+        <div className="customSelect__menu">
           {options.map((opt) => (
             <button
               key={opt.value}

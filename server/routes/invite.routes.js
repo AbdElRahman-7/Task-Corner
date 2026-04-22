@@ -14,23 +14,28 @@ const router = express.Router();
 router.post("/", protect, async (req, res) => {
   try {
     const { email, boardId, workspaceId, role } = req.body;
+    console.log("Incoming Invite:", { email, boardId, workspaceId });
 
-    if (!email || (!boardId && !workspaceId)) {
+    const bId = (boardId && boardId !== "undefined" && boardId !== "null") ? boardId : null;
+    const wId = (workspaceId && workspaceId !== "undefined" && workspaceId !== "null") ? workspaceId : null;
+    console.log("Sanitized IDs:", { bId, wId });
+
+    if (!email || (!bId && !wId)) {
       return res.status(400).json({ message: "Email and either Board ID or Workspace ID are required" });
     }
 
-    if (boardId && !mongoose.Types.ObjectId.isValid(boardId)) {
+    if (bId && !mongoose.Types.ObjectId.isValid(bId)) {
       return res.status(400).json({ message: "Invalid Board ID" });
     }
 
-    if (workspaceId && !mongoose.Types.ObjectId.isValid(workspaceId)) {
+    if (wId && !mongoose.Types.ObjectId.isValid(wId)) {
       return res.status(400).json({ message: "Invalid Workspace ID" });
     }
 
     // Check if an invite already exists for this email and target
     const query = { email, status: "pending" };
-    if (boardId) query.boardId = boardId;
-    if (workspaceId) query.workspaceId = workspaceId;
+    if (bId) query.boardId = bId;
+    if (wId) query.workspaceId = wId;
 
     const existingInvite = await Invite.findOne(query);
     if (existingInvite) {
@@ -44,8 +49,8 @@ router.post("/", protect, async (req, res) => {
 
     const invite = await Invite.create({
       email,
-      boardId: boardId || undefined,  
-      workspaceId: workspaceId || undefined,
+      boardId: bId || undefined,  
+      workspaceId: wId || undefined,
       token,
       role: role || "viewer",
     });

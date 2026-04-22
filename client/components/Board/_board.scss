@@ -4,25 +4,33 @@
 
 .boardPage {
   width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(
-      circle at 80% 20%,
-      rgba($brand-secondary, 0.08),
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 20% 80%,
-      rgba($brand-primary, 0.04),
-      transparent 40%
-    ),
+    radial-gradient(circle at 80% 20%, rgba($brand-secondary, 0.08), transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba($brand-primary, 0.04), transparent 40%),
     $light-bg;
   background-size: 200% 200%;
   animation: bg-motion 20s linear infinite;
 
+  // Dot grid texture
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba($brand-primary, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba($brand-primary, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  // Radial top highlight
   &::after {
     content: "";
     position: absolute;
@@ -32,37 +40,17 @@
     z-index: 1;
   }
 
-
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: 
-      linear-gradient(rgba($brand-primary, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba($brand-primary, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.6;
-    z-index: 0;
-  }
-
   @include dark {
     background:
-      radial-gradient(
-        circle at top right,
-        rgba($brand-secondary, 0.15),
-        transparent 40%
-      ),
-      radial-gradient(
-        circle at bottom left,
-        rgba($brand-primary, 0.15),
-        transparent 40%
-      ),
+      radial-gradient(circle at top right, rgba($brand-secondary, 0.15), transparent 40%),
+      radial-gradient(circle at bottom left, rgba($brand-primary, 0.15), transparent 40%),
       $dark-bg;
   }
-
 }
+
+// =========================================
+// Board Header
+// =========================================
 
 .boardHeader {
   padding: 2rem 4rem 1.5rem;
@@ -71,26 +59,21 @@
   top: 0;
   z-index: 110;
   background: $light-surface;
-  box-shadow: 
-    0 1px 0 rgba(0,0,0,0.05),
-    0 2px 0 rgba(0,0,0,0.05),
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.05),
+    0 2px 0 rgba(0, 0, 0, 0.04),
     $highlight-3d;
   transition: all $transition-base;
 
   @include dark {
     background: $dark-bg;
-    box-shadow: 
-      0 1px 0 rgba(255,255,255,0.05),
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05),
       $highlight-3d-dark;
   }
 
-  @include tablet {
-    padding: 1.5rem 2rem 1rem;
-  }
-
-  @include mobile {
-    padding: 1rem 1rem 0.75rem;
-  }
+  @include tablet { padding: 1.5rem 2rem 1rem; }
+  @include mobile { padding: 1rem 1rem 0.75rem; }
 }
 
 .backLink {
@@ -102,19 +85,20 @@
   border-radius: $radius-lg;
   margin-bottom: 2rem;
   border: 1px solid $light-border;
-  box-shadow: 
-    0 1px 0 rgba(0,0,0,0.1),
-    0 2px 0 rgba(0,0,0,0.1);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.1),
+    0 2px 0 rgba(0, 0, 0, 0.1);
   transition: all $transition-bounce;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-decoration: none;
 
   &:hover {
     background: $brand-primary;
     color: white;
     transform: translateY(-2px);
-    box-shadow: 
-      0 1px 0 rgba(0,0,0,0.1),
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.1),
       0 4px 12px rgba($brand-primary, 0.3);
   }
 
@@ -131,27 +115,44 @@
 }
 
 .boardTitle {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.75rem, 5vw, 3rem);
   font-weight: 950;
   letter-spacing: -0.04em;
   color: $light-text-primary;
   margin-bottom: 1.5rem;
   line-height: 1.1;
 
-  @include dark {
-    color: $dark-text-primary;
-  }
+  @include dark { color: $dark-text-primary; }
+
+  @include mobile { margin-bottom: 1rem; }
 }
+
+// =========================================
+// Board Content (horizontal scroll area)
+// =========================================
 
 .boardContent {
   flex: 1;
   display: flex;
   gap: 2rem;
   align-items: flex-start;
-  padding: 3rem 4rem 3rem;
+  padding: 3rem 4rem;
   overflow-x: auto;
   overflow-y: hidden;
   height: 100%;
+
+  // Smooth scrolling with momentum on touch devices
+  -webkit-overflow-scrolling: touch;
+
+  // Nice scrollbar for the horizontal track
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($brand-primary, 0.2);
+    border-radius: $radius-full;
+  }
 
   @include tablet {
     gap: 1.25rem;
@@ -164,30 +165,32 @@
     scroll-snap-type: x mandatory;
   }
 
-  > div {
-    scroll-snap-align: start;
-  }
+  > div { scroll-snap-align: start; }
 }
+
+// =========================================
+// Add List Panel
+// =========================================
 
 .addListPanel {
   width: clamp(280px, 85vw, 330px);
   flex-shrink: 0;
   padding: 2.5rem;
-
-  @include mobile {
-    width: min(85vw, 300px);
-    padding: 1.2rem;
-  }
   border: 2px dashed $brand-primary;
   border-radius: $radius-xl;
   background: rgba($brand-primary, 0.02);
   backdrop-filter: $glass-blur;
   transition: all $transition-bounce;
-  animation: springIn 0.8s $ease-bounce both;
+  animation: springIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 
   @include dark {
     background: rgba($brand-primary, 0.05);
     border-color: rgba($brand-primary, 0.4);
+  }
+
+  @include mobile {
+    width: min(85vw, 300px);
+    padding: 1.2rem;
   }
 
   &:hover {
@@ -196,9 +199,7 @@
     transform: translateY(-10px) scale(1.01);
     box-shadow: $glow-primary;
 
-    @include dark {
-      background: rgba($brand-primary, 0.1);
-    }
+    @include dark { background: rgba($brand-primary, 0.1); }
   }
 
   &__input {
@@ -207,9 +208,8 @@
     font-size: 0.95rem;
     padding: 0.9rem 1.25rem;
     background: $light-surface;
-    @include dark {
-      background: $dark-surface-2;
-    }
+
+    @include dark { background: $dark-surface-2; }
   }
 
   &__button {
@@ -222,6 +222,10 @@
     letter-spacing: 0.05em;
   }
 }
+
+// =========================================
+// 404 / Not Found
+// =========================================
 
 .notFound {
   max-width: 500px;
@@ -247,8 +251,10 @@
     letter-spacing: -0.05em;
     margin-bottom: 2rem;
   }
+
   a {
     @include btn-primary;
     padding: 1.1rem 2.5rem;
+    text-decoration: none;
   }
 }

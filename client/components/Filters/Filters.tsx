@@ -59,13 +59,23 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
     if (isHomePage) {
       return (
         <div className="filtersCompact">
-          <input
-            type="text"
-            placeholder="Search workspaces..."
-            value={search}
-            onChange={(e) => dispatch(setSearch(e.target.value))}
-            className="filterCompactInput filterCompactInput--home"
-          />
+          <div className="filtersCompact__search">
+            <input
+              type="text"
+              placeholder="Search workspaces..."
+              value={search}
+              onChange={(e) => dispatch(setSearch(e.target.value))}
+              className="filterCompactInput filterCompactInput--home"
+            />
+            {search && (
+              <button 
+                onClick={() => dispatch(setSearch(""))}
+                className="filtersCompact__clear"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <button
             onClick={() => {
               dispatch(clearFilters());
@@ -83,25 +93,27 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
       <div className="filtersCompact">
         <input
           type="text"
-          placeholder="Search items..."
+          placeholder="Filter..."
           value={search}
           onChange={(e) => dispatch(setSearch(e.target.value))}
           className="filterCompactInput"
         />
 
-        <CustomSelect
-          options={priorityOptions}
-          value={priority[0] || "all"}
-          onChange={handlePriorityChange}
-          className="filterCompactSelect"
-        />
+        <div className="filtersCompact__selects">
+          <CustomSelect
+            options={priorityOptions}
+            value={priority[0] || "all"}
+            onChange={handlePriorityChange}
+            className="filterCompactSelect"
+          />
 
-        <CustomSelect
-          options={labelOptions}
-          value={labelIds[0] || "all"}
-          onChange={handleLabelChange}
-          className="filterCompactSelect"
-        />
+          <CustomSelect
+            options={labelOptions}
+            value={labelIds[0] || "all"}
+            onChange={handleLabelChange}
+            className="filterCompactSelect"
+          />
+        </div>
 
         <button
           onClick={() => {
@@ -119,74 +131,76 @@ const Filters = ({ compact = false }: { compact?: boolean }) => {
   return (
     <div className="filters">
       <div className="filterGroup filterGroup--grow">
-        <label className="filterLabel">
-          {isHomePage ? "Search Workspaces" : "Search Items"}
-        </label>
+        <label className="filterLabel">Search Items</label>
         <input
           type="text"
-          placeholder={isHomePage ? "Filter boards by title..." : "Filter by title or description..."}
+          placeholder={isHomePage ? "Filter boards by title..." : "Filter tasks by title, description..."}
           value={search}
           onChange={(e) => dispatch(setSearch(e.target.value))}
           className="filterInput"
         />
       </div>
 
-      <div className="filterGroup">
-        <label className="filterLabel">Priority</label>
-        <CustomSelect
-          options={priorityOptions}
-          value={priority[0] || "all"}
-          onChange={handlePriorityChange}
-        />
+      <div className="filters__grid">
+        <div className="filterGroup">
+          <label className="filterLabel">Priority</label>
+          <CustomSelect
+            options={priorityOptions}
+            value={priority[0] || "all"}
+            onChange={handlePriorityChange}
+          />
+        </div>
+
+        <div className="filterGroup">
+          <label className="filterLabel">Labels</label>
+          <CustomSelect
+            options={labelOptions}
+            value={labelIds[0] || "all"}
+            onChange={handleLabelChange}
+          />
+        </div>
+
+        <div className="filterGroup">
+          <label className="filterLabel">Status</label>
+          <select
+            value={status}
+            onChange={(e) => dispatch(setStatusFilter(e.target.value))}
+            className="filterSelect"
+          >
+            <option value="all">All Columns</option>
+            {statusOptions.map(opt => (
+              <option key={opt} value={opt}>{opt.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filterGroup">
+          <label className="filterLabel">Timeline</label>
+          <select
+            value={due}
+            onChange={(e) =>
+              dispatch(setDueFilter(e.target.value as RootState["boards"]["filters"]["due"]))
+            }
+            className="filterSelect"
+          >
+            <option value="all">Anytime</option>
+            <option value="today">Due Today</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
       </div>
 
-      <div className="filterGroup">
-        <label className="filterLabel">Labels</label>
-        <CustomSelect
-          options={labelOptions}
-          value={labelIds[0] || "all"}
-          onChange={handleLabelChange}
-        />
-      </div>
-
-      <div className="filterGroup">
-        <label className="filterLabel">Column Status</label>
-        <select
-          value={status}
-          onChange={(e) => dispatch(setStatusFilter(e.target.value))}
-          className="filterSelect filterSelect--capitalize"
+      <div className="filters__actions">
+        <button
+          onClick={() => {
+            dispatch(clearFilters());
+            toast.success("Filters cleared!");
+          }}
+          className="filterResetBtn"
         >
-          <option value="all">All Columns</option>
-          {statusOptions.map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
+          Reset All
+        </button>
       </div>
-
-      <div className="filterGroup">
-        <label className="filterLabel">Due Date</label>
-        <select
-          value={due}
-          onChange={(e) =>
-            dispatch(setDueFilter(e.target.value as RootState["boards"]["filters"]["due"]))
-          }
-          className="filterSelect"
-        >
-          <option value="all">Anytime</option>
-          <option value="today">Due Today</option>
-          <option value="overdue">Overdue</option>
-        </select>
-      </div>
-
-      <button
-        onClick={() => {
-          dispatch(clearFilters());
-          toast.success("Filters cleared!");
-        }}
-        className="filterResetBtn"
-      >
-        Clear Filters
-      </button>
     </div>
   );
 };

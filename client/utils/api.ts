@@ -38,8 +38,14 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
 
   if (!response.ok) {
     if (contentType && contentType.includes("application/json")) {
-      const error = await response.json();
-      throw new Error(error.message || `Request failed with status ${response.status}`);
+      let error;
+      try {
+        error = await response.json();
+      } catch (e) {
+        error = null;
+      }
+      const errorMessage = error?.message || error?.error || (typeof error === 'string' ? error : null) || `Request failed with status ${response.status}`;
+      throw new Error(errorMessage);
     } else {
       const text = await response.text();
       console.error("API Error (Non-JSON):", text);

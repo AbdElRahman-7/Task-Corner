@@ -30,7 +30,7 @@ export default function BulkActions({
         className="group flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all shadow-sm"
       >
         <Users className={`w-4 h-4 ${hasSelection ? "text-violet-500" : "text-gray-400"}`} />
-        Bulk Actions
+        Filter 
         {selectedCount > 0 && (
           <span className="bg-violet-600 text-white text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center ml-0.5 shadow-sm">
             {selectedCount}

@@ -3,6 +3,10 @@
 @use "../../styles/mixins" as *;
 @use "../../styles/animations" as *;
 
+// =========================================
+// List Card (column)
+// =========================================
+
 .listCard {
   width: clamp(280px, 80vw, 330px);
   flex-shrink: 0;
@@ -12,11 +16,10 @@
   background: $light-surface;
   border-radius: $radius-xl;
   border: 1px solid $light-border;
-  box-shadow: 
-    0 1px 2px rgba(0,0,0,0.02),
-    0 4px 8px rgba(0,0,0,0.02),
-    0 12px 24px rgba(0,0,0,0.02);
-
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 12px 24px rgba(0, 0, 0, 0.02);
   position: relative;
   transition: all $transition-bounce;
 
@@ -26,6 +29,7 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 
+  // Inner highlight ring
   &::after {
     content: "";
     position: absolute;
@@ -37,11 +41,13 @@
     @include dark { border-color: rgba(255, 255, 255, 0.05); }
   }
 
+  // Status color variables
   --status-rgb: 79, 70, 229;
   --status-gradient: linear-gradient(135deg, #{$brand-primary}, #{$brand-secondary});
   --status-text: #{color.scale($brand-primary, $lightness: -15%)};
   --status-text-dark: #{color.scale($brand-primary, $lightness: 15%)};
 
+  // Colored bar at top
   &::before {
     content: "";
     position: absolute;
@@ -58,13 +64,11 @@
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 
+    box-shadow:
       0 12px 24px rgba(0, 0, 0, 0.05),
       0 0 15px rgba(var(--status-rgb), 0.05);
 
-    @include dark {
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-    }
+    @include dark { box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); }
   }
 
   &--dragging {
@@ -77,7 +81,7 @@
   &--overlay {
     cursor: grabbing;
     transform: scale(1.02) rotate(1deg);
-    box-shadow: 
+    box-shadow:
       0 40px 80px rgba(0, 0, 0, 0.2),
       0 0 40px rgba(var(--status-rgb), 0.2);
     z-index: 1000;
@@ -109,11 +113,12 @@
     color: var(--status-text);
     padding: 4px 12px;
     border-radius: $radius-lg;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
     @include dark {
       background: rgba(var(--status-rgb), 0.15);
       color: var(--status-text-dark);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
   }
 
@@ -124,6 +129,7 @@
     flex-direction: column;
     gap: 1.25rem;
     min-height: 50px;
+    overflow-y: auto;
   }
 
   &__footer {
@@ -139,7 +145,7 @@
     border: 2px dashed $light-border-hover;
     background: $light-surface-2;
     color: $light-text-secondary;
-    
+
     &:hover {
       background: $brand-primary;
       color: white;
@@ -186,6 +192,10 @@
   }
 }
 
+// =========================================
+// Task Card
+// =========================================
+
 .taskCard {
   @include three-d-lift;
   padding: 1.5rem;
@@ -201,8 +211,8 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: rgba(0,0,0,0.02);
-    @include dark { background: rgba(255,255,255,0.05); }
+    background: rgba(0, 0, 0, 0.02);
+    @include dark { background: rgba(255, 255, 255, 0.05); }
   }
 
   &--dragging {
@@ -215,13 +225,11 @@
   &--overlay {
     cursor: grabbing;
     transform: scale(1.05) rotate(2deg);
-    box-shadow: 
+    box-shadow:
       0 30px 60px rgba(0, 0, 0, 0.2),
       0 0 30px rgba($brand-primary, 0.2);
     z-index: 1000;
   }
-
-
 
   &:active {
     cursor: grabbing;
@@ -249,10 +257,7 @@
     margin-bottom: 1rem;
     transition: all $transition-bounce;
 
-
-    @include dark {
-      color: $dark-text-primary;
-    }
+    @include dark { color: $dark-text-primary; }
 
     &--done {
       text-decoration: line-through;
@@ -264,7 +269,7 @@
   &--done {
     background: rgba($brand-accent, 0.02);
     border-color: rgba($brand-accent, 0.1);
-    
+
     @include dark {
       background: rgba($brand-accent, 0.01);
       border-color: rgba($brand-accent, 0.05);
@@ -291,9 +296,7 @@
     font-weight: 900;
     color: $light-text-muted;
 
-    @include dark {
-      color: $dark-text-muted;
-    }
+    @include dark { color: $dark-text-muted; }
 
     &--done {
       color: $brand-accent;
@@ -317,9 +320,9 @@
       color: $dark-text-secondary;
     }
 
-    &--high { background: rgba($brand-danger, 0.1); color: $brand-danger; }
+    &--high   { background: rgba($brand-danger, 0.1);  color: $brand-danger; }
     &--medium { background: rgba($brand-warning, 0.1); color: $brand-warning; }
-    &--low { background: rgba($brand-accent, 0.1); color: $brand-accent; }
+    &--low    { background: rgba($brand-accent, 0.1);  color: $brand-accent; }
   }
 
   &__priorityDot {
@@ -329,9 +332,9 @@
     margin-right: 0.5rem;
     display: inline-block;
 
-    .taskCard__priority--high & { background: $brand-danger; box-shadow: 0 0 10px rgba($brand-danger, 0.4); }
+    .taskCard__priority--high &   { background: $brand-danger;  box-shadow: 0 0 10px rgba($brand-danger, 0.4); }
     .taskCard__priority--medium & { background: $brand-warning; box-shadow: 0 0 10px rgba($brand-warning, 0.4); }
-    .taskCard__priority--low & { background: $brand-accent; box-shadow: 0 0 10px rgba($brand-accent, 0.4); }
+    .taskCard__priority--low &    { background: $brand-accent;  box-shadow: 0 0 10px rgba($brand-accent, 0.4); }
   }
 
   &__footer {
@@ -367,9 +370,7 @@
     letter-spacing: 0.02em;
   }
 
-  &__assignee {
-    margin-left: auto;
-  }
+  &__assignee { margin-left: auto; }
 
   &__assigneeStack {
     display: flex;
@@ -389,10 +390,10 @@
     font-weight: 1000;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     border: 2px solid $light-surface;
+    transition: all $transition-bounce;
 
     @include dark { border-color: $dark-surface-2; }
-    
-    transition: all $transition-bounce;
+
     &:hover {
       transform: scale(1.1) translateY(-2px);
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
@@ -416,7 +417,7 @@
     font-weight: 1000;
 
     @include dark {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       color: white;
       border-color: $dark-surface-2;
     }

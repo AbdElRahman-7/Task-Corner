@@ -104,26 +104,11 @@ export default function Home() {
             Manage and organize all your project boards in one place.
           </p>
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={() => setIsInviteOpen(true)}
-              className="inviteBtn"
-              style={{
-                marginTop: '1rem',
-                padding: '10px 20px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 15px rgba(0, 123, 255, 0.3)',
-                transition: 'transform 0.2s'
-              }}
+              className="homeHeader__inviteBtn"
             >
-              <span style={{ fontSize: '1.2rem' }}>+</span> 
+              <span style={{ fontSize: '1.2rem' }}>+</span>
               Invite Members
             </button>
           </div>
@@ -148,23 +133,21 @@ export default function Home() {
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-8 mb-8 border-b border-gray-200 dark:border-zinc-800 px-2">
-        <button 
+        <button
           onClick={() => setActiveTab("active")}
-          className={`pb-4 text-sm font-bold transition-all border-b-2 ${
-            activeTab === "active" 
-            ? "text-blue-600 border-blue-600" 
-            : "text-gray-400 border-transparent hover:text-gray-600"
-          }`}
+          className={`pb-4 text-sm font-bold transition-all border-b-2 ${activeTab === "active"
+              ? "text-blue-600 border-blue-600"
+              : "text-gray-400 border-transparent hover:text-gray-600"
+            }`}
         >
           Active Boards ({activeCount})
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("archived")}
-          className={`pb-4 text-sm font-bold transition-all border-b-2 ${
-            activeTab === "archived" 
-            ? "text-amber-600 border-amber-600" 
-            : "text-gray-400 border-transparent hover:text-gray-600"
-          }`}
+          className={`pb-4 text-sm font-bold transition-all border-b-2 ${activeTab === "archived"
+              ? "text-amber-600 border-amber-600"
+              : "text-gray-400 border-transparent hover:text-gray-600"
+            }`}
         >
           Archived ({archivedCount})
         </button>
@@ -177,9 +160,9 @@ export default function Home() {
             {filteredActiveBoards.length > 0 ? (
               filteredActiveBoards.map((board, index) => (
                 <div key={board.id} className="animate-springIn" style={{ "--i": index } as React.CSSProperties}>
-                  <Board 
-                    board={board} 
-                    onDelete={handleDeleteBoard} 
+                  <Board
+                    board={board}
+                    onDelete={handleDeleteBoard}
                     onArchive={handleArchiveBoard}
                   />
                 </div>
@@ -194,7 +177,7 @@ export default function Home() {
               <button
                 id="add-board-tile"
                 onClick={() => setIsModalOpen(true)}
-                className="addBoardBtn"
+                className="addBoardBtn "
               >
                 <div className="addBoardBtn__icon">+</div>
                 <span className="addBoardBtn__text">New Workspace</span>
@@ -206,9 +189,9 @@ export default function Home() {
             {filteredArchivedBoards.length > 0 ? (
               filteredArchivedBoards.map((board, index) => (
                 <div key={board.id} className="animate-springIn" style={{ "--i": index } as React.CSSProperties}>
-                  <Board 
-                    board={board} 
-                    onDelete={handleDeleteBoard} 
+                  <Board
+                    board={board}
+                    onDelete={handleDeleteBoard}
                     onArchive={handleArchiveBoard}
                   />
                 </div>
@@ -233,7 +216,6 @@ export default function Home() {
       />
 
       <InviteModal
-        workspaceId="default-workspace"
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
       />
