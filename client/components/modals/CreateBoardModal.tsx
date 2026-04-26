@@ -46,7 +46,8 @@ const CreateBoardModal = ({ isOpen, onClose, onCreate, initialTitle = "" }: Crea
         setAvailableUsers(res.users);
       }
     } catch (error) {
-      console.error("Failed to fetch users for suggestions");
+      console.log("Failed to fetch users for suggestions");
+      console.error(error);
     }
   };
 
