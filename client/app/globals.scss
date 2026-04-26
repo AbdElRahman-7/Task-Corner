@@ -1,6 +1,6 @@
 @use "../styles/index" as *;
 
-@import "tailwindcss";
+@use "tailwindcss" as *;
 @variant dark (&:where(.dark, .dark *));
 
 /* ===========================
