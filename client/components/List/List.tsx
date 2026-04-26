@@ -1,6 +1,6 @@
 "use client";
-import Task from "../Task/Task";
-import { Task as TaskType } from "../../types/index";
+import Task from "@components/Task/Task";
+import { Task as TaskType } from "@appTypes/index";
 
 interface Props {
   tasks: TaskType[];

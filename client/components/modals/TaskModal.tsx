@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Task, TaskAssignment, AssignmentRole, TaskAssignmentPermissions } from "../../types/index";
-import { updateTask, deleteTask } from "../../store/boardSlice";
-import { RootState } from "../../store/index";
+import { Task, TaskAssignment, AssignmentRole, TaskAssignmentPermissions } from "@appTypes/index";
+import { updateTask, deleteTask } from "@store/boardSlice";
+import { RootState } from "@store/index";
 import {
   X,
   AlignLeft,
@@ -17,8 +17,8 @@ import {
   Clock,
 } from "lucide-react";
 
-import CustomSelect from "../Filters/CustomSelect";
-import { addLabel, deleteLabel } from "../../store/boardSlice";
+import CustomSelect from "@components/Filters/CustomSelect";
+import { addLabel, deleteLabel } from "@store/boardSlice";
 import { toast } from "react-hot-toast";
 
 interface TaskModalProps {

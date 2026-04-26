@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@store/index";
 import { logout } from "@store/authSlice";
 import { toast } from "react-hot-toast";
-import Filters from "../Filters/Filters";
+import Filters from "@components/Filters/Filters";
 import ThemeToggle from "@components/ThemeProvider/ThemeToggle";
 import type { AppDispatch } from "@store/index";
 import { usePathname } from "next/navigation";

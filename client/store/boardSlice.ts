@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { BoardsState, Task, Board as BoardType, TaskAssignment } from "@appTypes/index";
 import { apiFetch } from "@utils/api";
-import type { RootState } from "./index";
+import type { RootState } from "@store/index";
 
 type ApiBoard = { _id: string; title: string; user?: string; members?: any[] };
 type ApiList = { _id: string; title: string; boardId: string };

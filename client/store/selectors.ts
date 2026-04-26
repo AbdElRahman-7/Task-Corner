@@ -1,6 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { RootState } from "./index";
-import { Task } from "../types/index";
+import { RootState } from "@store/index";
+import { Task } from "@appTypes/index";
 
 const selectFilters = (state: RootState) => state.boards.filters;
 type FiltersState = RootState["boards"]["filters"];

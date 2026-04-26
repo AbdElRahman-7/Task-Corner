@@ -3,7 +3,7 @@ import { X, UserMinus, Shield, ShieldCheck, User } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@store/index";
 import { updateMemberRoleDB, removeMemberDB, cancelInviteDB } from "@store/boardSlice";
-import { AVATAR_COLORS, getInitials } from "../users/userUtils";
+import { AVATAR_COLORS, getInitials } from "@components/users/userUtils";
 import { toast } from "react-hot-toast";
 
 interface BoardMembersSideBarProps {

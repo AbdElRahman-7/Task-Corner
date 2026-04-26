@@ -1,7 +1,7 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import boardReducer from "./boardSlice";
-import authReducer from "./authSlice";
-import { loadState, saveState } from "./localStorage";
+import boardReducer from "@store/boardSlice";
+import authReducer from "@store/authSlice";
+import { loadState, saveState } from "@store/localStorage";
 
 const rootReducer = combineReducers({
   boards: boardReducer,

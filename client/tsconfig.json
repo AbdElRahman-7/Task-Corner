@@ -27,17 +27,41 @@
       "@components/*": [
         "components/*"
       ],
+      "@components": [
+        "components"
+      ],
       "@store/*": [
         "store/*"
+      ],
+      "@store": [
+        "store/index"
       ],
       "@appTypes/*": [
         "types/*"
       ],
+      "@appTypes": [
+        "types/index"
+      ],
       "@utils/*": [
         "utils/*"
       ],
+      "@utils": [
+        "utils/api"
+      ],
+      "@styles/*": [
+        "styles/*"
+      ],
+      "@styles": [
+        "styles"
+      ],
+      "@app/*": [
+        "app/*"
+      ],
+      "@app": [
+        "app"
+      ],
       "@/*": [
-        "*"
+        "./*"
       ]
     }
   },
@@ -51,4 +75,4 @@
   "exclude": [
     "node_modules"
   ]
-}
+} 

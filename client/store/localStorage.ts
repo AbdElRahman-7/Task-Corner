@@ -1,4 +1,4 @@
-import type { RootState } from "./index";
+import type { RootState } from "@store/index";
 
 type PersistedState = Partial<RootState> & {
   ui?: {

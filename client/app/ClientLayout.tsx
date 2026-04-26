@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Provider } from "react-redux";
-import { store } from "../store";
+import { store } from "@store";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@components/ThemeProvider/ThemeProvider";
 import { loadState } from "@store/localStorage";

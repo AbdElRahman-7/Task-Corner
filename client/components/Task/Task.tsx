@@ -1,4 +1,4 @@
-import { Task as TaskType } from "../../types/index";
+import { Task as TaskType } from "@appTypes/index";
 
 interface Props {
   task: TaskType;
