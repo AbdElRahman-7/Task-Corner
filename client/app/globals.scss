@@ -1,8 +1,5 @@
 @use "../styles/index" as *;
 
-@use "tailwindcss" as *;
-@variant dark (&:where(.dark, .dark *));
-
 /* ===========================
    Base Styles
    =========================== */

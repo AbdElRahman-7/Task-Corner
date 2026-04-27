@@ -178,9 +178,10 @@ $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 // CSS-variable-based stagger for dynamic lists
-[style*="--i"] {
+:global([style*="--i"]) {
   animation-delay: calc(var(--i) * 0.1s) !important;
 }
+
 
 .hover-lift {
   transition: transform $transition-base, box-shadow $transition-base;

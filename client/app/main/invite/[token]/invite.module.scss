@@ -1,6 +1,8 @@
-@use '../../styles/variables' as *;
-@use '../../styles/mixins' as *;
-@use '../../styles/animations' as *;
+@use "sass:color";
+@use "../../../../styles/variables" as *;
+
+@use "../../../../styles/mixins" as *;
+@use "../../../../styles/animations" as *;
 
 // =========================================
 // Invite Page — fully responsive
@@ -13,14 +15,30 @@
   min-height: 100vh;
   padding: 1.5rem;
   background:
-    radial-gradient(circle at 70% 20%, rgba($brand-secondary, 0.12), transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba($brand-primary, 0.08), transparent 50%),
+    radial-gradient(
+      circle at 70% 20%,
+      rgba($brand-secondary, 0.12),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba($brand-primary, 0.08),
+      transparent 50%
+    ),
     $light-bg;
 
   @include dark {
     background:
-      radial-gradient(circle at 70% 20%, rgba($brand-secondary, 0.2), transparent 50%),
-      radial-gradient(circle at 20% 80%, rgba($brand-primary, 0.15), transparent 50%),
+      radial-gradient(
+        circle at 70% 20%,
+        rgba($brand-secondary, 0.2),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 20% 80%,
+        rgba($brand-primary, 0.15),
+        transparent 50%
+      ),
       $dark-bg;
   }
 }
@@ -67,7 +85,9 @@
   color: $brand-danger;
   margin-bottom: 0.75rem;
 
-  @include mobile { font-size: 1.5rem; }
+  @include mobile {
+    font-size: 1.5rem;
+  }
 }
 
 .title {
@@ -78,9 +98,13 @@
   margin-bottom: 0.75rem;
   line-height: 1.25;
 
-  @include dark { color: $dark-text-primary; }
+  @include dark {
+    color: $dark-text-primary;
+  }
 
-  @include mobile { font-size: 1.35rem; }
+  @include mobile {
+    font-size: 1.35rem;
+  }
 }
 
 .muted {
@@ -88,11 +112,17 @@
   font-size: 0.95rem;
   line-height: 1.6;
 
-  @include dark { color: $dark-text-muted; }
+  @include dark {
+    color: $dark-text-muted;
+  }
 }
 
-.mb1 { margin-bottom: 1rem; }
-.mb2 { margin-bottom: 1.5rem; }
+.mb1 {
+  margin-bottom: 1rem;
+}
+.mb2 {
+  margin-bottom: 1.5rem;
+}
 
 // =========================================
 // Loading state
@@ -108,7 +138,7 @@
   animation: pulse-soft 1.6s ease-in-out infinite;
 
   &::before {
-    content: '';
+    content: "";
     width: 18px;
     height: 18px;
     border: 2.5px solid rgba($brand-primary, 0.25);
@@ -120,7 +150,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // =========================================
@@ -158,9 +190,13 @@
   line-height: 1.7;
   margin-bottom: 1.5rem;
 
-  @include dark { color: $dark-text-secondary; }
+  @include dark {
+    color: $dark-text-secondary;
+  }
 
-  @include mobile { font-size: 0.9rem; }
+  @include mobile {
+    font-size: 0.9rem;
+  }
 }
 
 .email {
@@ -172,7 +208,9 @@
   letter-spacing: -0.01em;
   word-break: break-all;
 
-  @include dark { color: lighten($brand-primary, 15%); }
+  @include dark {
+    color: color.adjust($brand-primary, $lightness: 15%);
+  }
 }
 
 // =========================================
@@ -199,7 +237,9 @@
   margin: 0;
   line-height: 1.5;
 
-  @include dark { color: $dark-text-secondary; }
+  @include dark {
+    color: $dark-text-secondary;
+  }
 }
 
 // =========================================

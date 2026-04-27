@@ -1,21 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
+
 import { useSelector } from "react-redux";
 import { RootState } from "@store/index";
 import { apiFetch } from "@utils/api";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { loadState } from "@store/localStorage";
 import styles from "./invite.module.scss";
 
-export default function InvitePage() {
-  const pathname = usePathname();
-  const tokenFromPath = (() => {
-    const last = pathname?.split("/").filter(Boolean).pop();
-    if (!last || last === "invite") return undefined;
-    return last;
-  })();
-  const token = tokenFromPath;
+export default function InvitePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = use(params);
   const router = useRouter();
   const authTokenFromRedux = useSelector((state: RootState) => state.auth.token);
   const authToken = authTokenFromRedux ?? loadState()?.auth?.token ?? null;
