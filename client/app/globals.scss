@@ -2,6 +2,9 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
 
+// Import all premium styles
+@import "../styles/index.scss";
+
 /* ===========================
    Base Styles
    =========================== */
@@ -16,9 +19,9 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  font-family: $font-sans;
+  background: $light-bg;
+  color: $light-text-primary;
   transition: background 0.25s ease, color 0.25s ease;
   margin: 0;
   padding: 0;
@@ -26,8 +29,8 @@ body {
 
 /* Dark mode body */
 html.dark body {
-  background: #060b18;
-  color: #e8edf5;
+  background: $dark-bg;
+  color: $dark-text-primary;
 }
 
 /* ===========================
@@ -43,52 +46,33 @@ html.dark body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: $light-surface-3;
   border-radius: 999px;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #1e2d47;
+  background: $dark-surface-2;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: $light-text-muted;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #334466;
+  background: $dark-text-muted;
 }
 
 /* ===========================
    Focus Ring
    =========================== */
 :focus-visible {
-  outline: 2px solid #4f8ef7;
+  outline: 2px solid $brand-primary;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* ===========================
-   Animations
-   =========================== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+// Redundant animation classes removed - already in index.scss
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-
-.animate-fadeIn  { animation: fadeIn 0.2s ease forwards; }
-.animate-scaleIn { animation: scaleIn 0.2s ease forwards; }
-.animate-slideInRight { animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
 /* ===========================
    CSS Variable Stagger
