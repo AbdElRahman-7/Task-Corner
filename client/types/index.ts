@@ -55,11 +55,11 @@ export interface BoardMember {
 
 export interface Board {
   id: string;
-  _id?: string; // MongoDB ID as alternative
+  _id?: string; 
   title: string;
   listIds: string[];
   members: BoardMember[];
-  owner: string | { _id: string; username: string; email: string }; // Owner User ID or object
+  owner?: string | { _id: string; username: string; email: string }; 
   isArchived?: boolean;
 }
 export interface Label {

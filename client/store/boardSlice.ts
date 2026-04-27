@@ -235,30 +235,6 @@ const boardSlice = createSlice({
   name: "boards",
   initialState,
   reducers: {
-    addBoard: (state, action: PayloadAction<{ id: string; title: string }>) => {
-      const boardId = action.payload.id;
-      state.boards[boardId] = {
-        id: boardId,
-        title: action.payload.title,
-        listIds: [],
-        members: [],
-        isArchived: false,
-      };
-      if (!state.selectedBoardId) state.selectedBoardId = boardId;
-      const defaultLists = ["Todo", "In Progress", "Done"];
-      defaultLists.forEach((listTitle) => {
-        const listId = crypto.randomUUID();
-        state.lists[listId] = {
-          id: listId,
-          title: listTitle,
-          taskIds: [],
-          boardId,
-        };
-        if (boardId && state.boards[boardId]) {
-          state.boards[boardId].listIds.push(listId);
-        }
-      });
-    },
     addCustomList: (
       state,
       action: PayloadAction<{ boardId: string; title: string }>,
@@ -271,27 +247,6 @@ const boardSlice = createSlice({
         boardId: action.payload.boardId,
       };
       state.boards[action.payload.boardId].listIds.push(listId);
-    },
-    addTask: (
-      state,
-      action: PayloadAction<{ listId: string; title: string }>,
-    ) => {
-      const taskId = crypto.randomUUID();
-      state.tasks[taskId] = {
-        id: taskId,
-        title: action.payload.title,
-        description: "",
-        priority: "medium",
-        labels: [],
-        checklist: [],
-        progress: 0,
-        status:
-          state.lists[action.payload.listId]?.title.toLowerCase() ?? "todo",
-        listId: action.payload.listId,
-        createdAt: Date.now(),
-        autoDone: false,
-      };
-      state.lists[action.payload.listId].taskIds.push(taskId);
     },
     updateTask: (
       state,
@@ -632,9 +587,7 @@ const boardSlice = createSlice({
 });
 
 export const {
-  addBoard,
   addCustomList,
-  addTask,
   updateTask,
   addLabel,
   deleteLabel,
