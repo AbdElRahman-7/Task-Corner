@@ -4,14 +4,18 @@ const authRoutes = require("./routes/auth.routes.js");
 const boardRoutes = require("./routes/board.routes.js");
 const taskRoutes = require("./routes/task.routes.js");
 const inviteRoutes = require("./routes/invite.routes.js");
-const adminRoutes = require("./routes/admin.routes");
+const adminRoutes = require("./routes/admin.routes.js");
 const listRoutes = require("./routes/list.routes.js");
 
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors({ 
+  origin: process.env.CLIENT_URL || "*", 
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // Basic Request Logger
 app.use((req, res, next) => {

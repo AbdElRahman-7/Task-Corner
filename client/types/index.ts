@@ -59,7 +59,7 @@ export interface Board {
   title: string;
   listIds: string[];
   members: BoardMember[];
-  owner?: string; // Owner User ID
+  owner: string | { _id: string; username: string; email: string }; // Owner User ID or object
   isArchived?: boolean;
 }
 export interface Label {

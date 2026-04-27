@@ -27,7 +27,8 @@ export default function LoginPage() {
       });
       if (!data?.token) throw new Error("Login succeeded but no token returned.");
 
-      dispatch(loginSuccess({ user: data, token: data.token as string }));
+      const { token, ...userData } = data;
+      dispatch(loginSuccess({ user: userData, token }));
       toast.success("Login successful!");
       router.push("/");
     } catch (err: unknown) {

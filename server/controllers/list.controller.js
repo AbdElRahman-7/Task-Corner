@@ -9,9 +9,16 @@ const createList = async (req, res) => {
   try {
     const { boardId, title } = req.body;
 
-    const board = await Board.findById(boardId);
+    const board = await Board.findOne({ 
+      _id: boardId, 
+      $or: [
+        { user: req.user._id },
+        { members: { $elemMatch: { user: req.user._id, role: "editor" } } }
+      ]
+    });
+    
     if (!board) {
-      return res.status(404).json({ message: "Board not found" });
+      return res.status(403).json({ message: "No permission to create lists on this board" });
     }
 
     const list = await List.create({
@@ -26,18 +33,22 @@ const createList = async (req, res) => {
   }
 };
 
-// @desc    Update a list
-// @route   PUT /api/lists/:id
-// @access  Private
 const updateList = async (req, res) => {
   try {
     const { id } = req.params;
     const { title } = req.body;
 
     const list = await List.findById(id);
-    if (!list) {
-      return res.status(404).json({ message: "List not found" });
-    }
+    if (!list) return res.status(404).json({ message: "List not found" });
+
+    const board = await Board.findOne({ 
+      _id: list.boardId, 
+      $or: [
+        { user: req.user._id },
+        { members: { $elemMatch: { user: req.user._id, role: "editor" } } }
+      ]
+    });
+    if (!board) return res.status(403).json({ message: "No permission to update this list" });
 
     list.title = title || list.title;
     const updatedList = await list.save();
@@ -48,21 +59,23 @@ const updateList = async (req, res) => {
   }
 };
 
-// @desc    Delete a list
-// @route   DELETE /api/lists/:id
-// @access  Private
 const deleteList = async (req, res) => {
   try {
     const { id } = req.params;
 
     const list = await List.findById(id);
-    if (!list) {
-      return res.status(404).json({ message: "List not found" });
-    }
+    if (!list) return res.status(404).json({ message: "List not found" });
 
-    // Delete all tasks in this list
+    const board = await Board.findOne({ 
+      _id: list.boardId, 
+      $or: [
+        { user: req.user._id },
+        { members: { $elemMatch: { user: req.user._id, role: "editor" } } }
+      ]
+    });
+    if (!board) return res.status(403).json({ message: "No permission to delete this list" });
+
     await Task.deleteMany({ listId: id });
-    
     await list.deleteOne();
 
     res.json({ message: "List removed", listId: id });

@@ -39,6 +39,12 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
   const contentType = response.headers.get("content-type");
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      // Auto-logout on unauthorized
+      localStorage.removeItem("taskcorner_state");
+      window.location.href = "/main/auth/login";
+    }
+
     if (contentType && contentType.includes("application/json")) {
       let error;
       try {

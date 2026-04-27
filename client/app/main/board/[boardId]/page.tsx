@@ -1,5 +1,5 @@
 "use client";
-import { use, useState, useCallback, useEffect } from "react";
+import { use, useState, useCallback, useEffect, useMemo } from "react";
 import {
   DndContext,
   closestCorners,
@@ -60,10 +60,16 @@ export default function BoardPage({
     }
   }, [boardId, dispatch]);
 
-  const isEditor = board?.owner === currentUser?._id || board?.members?.some(m => {
-    const mUserId = typeof m.user === 'string' ? m.user : m.user?._id;
-    return mUserId === currentUser?._id && m.role === 'editor';
-  });
+  const isEditor = useMemo(() => {
+    if (!board || !currentUser) return false;
+    const ownerId = typeof board.owner === 'object' ? board.owner._id : board.owner;
+    if (ownerId === currentUser._id) return true;
+
+    return board.members?.some(m => {
+      const mUserId = typeof m.user === 'object' ? m.user._id : m.user;
+      return mUserId === currentUser._id && m.role === 'editor';
+    });
+  }, [board, currentUser]);
 
   const handleTaskClick = useCallback((task: Task, listId: string) => {
     setSelectedTask(task);
@@ -233,6 +239,7 @@ export default function BoardPage({
                     list={listData}
                     index={index}
                     onTaskClick={(task) => handleTaskClick(task, listId)}
+                    canEdit={isEditor}
                   />
                 </div>
               );
@@ -301,6 +308,7 @@ export default function BoardPage({
               listId=""
               onClick={() => { }}
               isOverlay
+              canEdit={isEditor}
             />
           ) : activeId && activeType === "list" ? (
             <ListCard
@@ -308,6 +316,7 @@ export default function BoardPage({
               list={lists[activeId]}
               onTaskClick={() => { }}
               isOverlay
+              canEdit={isEditor}
             />
           ) : null}
 

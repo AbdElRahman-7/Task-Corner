@@ -17,12 +17,17 @@ interface TaskCardProps {
   listId: string;
   onClick: (task: Task) => void;
   isOverlay?: boolean;
+  canEdit?: boolean;
 }
 
-const TaskCard = memo(({ id, task, listId, onClick, isOverlay }: TaskCardProps) => {
+const TaskCard = memo(({ id, task, listId, onClick, isOverlay, canEdit = true }: TaskCardProps) => {
   const allLabels = useSelector((state: RootState) => state.boards.labels);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id, data: { type: "task", listId }, disabled: isOverlay });
+    useSortable({ 
+      id, 
+      data: { type: "task", listId }, 
+      disabled: isOverlay || !canEdit 
+    });
 
   const dragStyle = {
     transform: isOverlay ? undefined : CSS.Transform.toString(transform),

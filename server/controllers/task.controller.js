@@ -16,7 +16,7 @@ const createTask = async (req, res) => {
       _id: list.boardId, 
       $or: [
         { user: req.user._id },
-        { "members.user": req.user._id, "members.role": "editor" }
+        { members: { $elemMatch: { user: req.user._id, role: "editor" } } }
       ]
     });
     if (!board) return res.status(403).json({ message: "No editor permission on this board" });

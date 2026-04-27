@@ -21,9 +21,10 @@ interface ListCardProps {
   index?: number;
   onTaskClick: (task: Task) => void;
   isOverlay?: boolean;
+  canEdit?: boolean;
 }
 
-const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCardProps) => {
+const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay, canEdit = true }: ListCardProps) => {
   
   const tasks = useSelector((state: RootState) => state.boards.tasks);
   const selectTasksForThisList = React.useMemo(() => selectOrderedTasksByList(id), [id]);
@@ -35,11 +36,16 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
   const statusType = list.title.toLowerCase().replace(/\s+/g, '-');
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id, data: { type: "list", listId: id }, disabled: isOverlay });
+    useSortable({ 
+      id, 
+      data: { type: "list", listId: id }, 
+      disabled: isOverlay || !canEdit 
+    });
 
   const { setNodeRef: setDropRef } = useDroppable({
     id: `list-drop-${id}`,
     data: { type: "list", listId: id },
+    disabled: !canEdit
   });
 
   const dragStyle = {
@@ -81,6 +87,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
                   task={tasks[taskId]}
                   listId={id}
                   onClick={onTaskClick}
+                  canEdit={canEdit}
                 />
               </div>
             ))}
@@ -93,7 +100,7 @@ const ListCard = memo(({ id, list, index = 0, onTaskClick, isOverlay }: ListCard
         )}
       </div>
 
-      {!isOverlay && (
+      {!isOverlay && canEdit && (
         <div className="listCard__footer">
           <input
             type="text"

@@ -6,46 +6,49 @@ const Board = require("../models/board.model");
 const Task = require("../models/task.model");
 const List = require("../models/list.model");
 const Invite = require("../models/invite.model");
-const { protect: authMiddleware } = require("../middleware/auth.middleware");
+const { protect: authMiddleware, admin: adminMiddleware } = require("../middleware/auth.middleware");
 
 // ─────────────────────────────────────────────────────────
 // GET /api/admin/users
 // ─────────────────────────────────────────────────────────
-router.get("/users", authMiddleware, async (req, res) => {
+router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const users = await User.find({}, "-password");
 
-    const usersWithStats = await Promise.all(
-      users.map(async (user) => {
-        const allBoards = await Board.find({
-          $or: [{ user: user._id }, { "members.user": user._id }],
-        });
-        const boardIds = allBoards.map((b) => b._id);
+    // Optimized: Fetch all boards and tasks in single queries to avoid N+1 problem
+    const allBoards = await Board.find({});
+    const allLists = await List.find({});
+    const allTasks = await Task.find({});
 
-        const lists = await List.find({ boardId: { $in: boardIds } });
-        const listIds = lists.map((l) => l._id);
+    const usersWithStats = users.map((user) => {
+      const userBoards = allBoards.filter(b => 
+        b.user?.toString() === user._id.toString() || 
+        b.members?.some(m => m.user?.toString() === user._id.toString())
+      );
+      
+      const boardIds = userBoards.map(b => b._id.toString());
+      const userLists = allLists.filter(l => boardIds.includes(l.boardId?.toString()));
+      const listIds = userLists.map(l => l._id.toString());
+      const userTasks = allTasks.filter(t => listIds.includes(t.listId?.toString()));
 
-        const tasks = await Task.find({ listId: { $in: listIds } });
+      const taskStats = {
+        total: userTasks.length,
+        todo: userTasks.filter((t) => t.status === "todo").length,
+        inProgress: userTasks.filter((t) => t.status === "in-progress" || t.status === "in progress").length,
+        done: userTasks.filter((t) => t.status === "done").length,
+      };
 
-        const taskStats = {
-          total: tasks.length,
-          todo: tasks.filter((t) => t.status === "todo").length,
-          inProgress: tasks.filter((t) => t.status === "in-progress").length,
-          done: tasks.filter((t) => t.status === "done").length,
-        };
-
-        return {
-          _id: user._id,
-          username: user.username,
-          email: user.email,
-          role: user.role || "user",
-          status: user.status || "active",
-          createdAt: user.createdAt,
-          boardsCount: allBoards.length,
-          taskStats,
-        };
-      })
-    );
+      return {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role || "user",
+        status: user.status || "active",
+        createdAt: user.createdAt,
+        boardsCount: userBoards.length,
+        taskStats,
+      };
+    });
 
     res.json({ success: true, users: usersWithStats });
   } catch (err) {
@@ -56,7 +59,7 @@ router.get("/users", authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 // POST /api/admin/users (Direct Create)
 // ─────────────────────────────────────────────────────────
-router.post("/users", authMiddleware, async (req, res) => {
+router.post("/users", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { username, email, password, boardId, role, status } = req.body;
     
@@ -102,7 +105,7 @@ router.post("/users", authMiddleware, async (req, res) => {
 // POST /api/admin/invite
 // Send an invite link to a new user by email
 // ─────────────────────────────────────────────────────────
-router.post("/invite", authMiddleware, async (req, res) => {
+router.post("/invite", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -138,26 +141,54 @@ router.post("/invite", authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 // DELETE /api/admin/users/bulk  ← must be before /:id
 // ─────────────────────────────────────────────────────────
-router.delete("/users/bulk", authMiddleware, async (req, res) => {
+router.delete("/users/bulk", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { ids } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ success: false, message: "No ids provided" });
     }
+
+    // 1. Remove users from all board members arrays
+    await Board.updateMany(
+      {},
+      { $pull: { members: { user: { $in: ids } } } }
+    );
+
+    // 2. Remove users from task assignments
+    await Task.updateMany(
+      {},
+      { $pull: { assignments: { user: { $in: ids } } } }
+    );
+
+    // 3. Delete users
     await User.deleteMany({ _id: { $in: ids } });
-    res.json({ success: true, message: `${ids.length} users deleted` });
+
+    res.json({ success: true, message: `${ids.length} users deleted and cleaned up from boards/tasks` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// ─────────────────────────────────────────────────────────
-// DELETE /api/admin/users/:id
-// ─────────────────────────────────────────────────────────
-router.delete("/users/:id", authMiddleware, async (req, res) => {
+router.delete("/users/:id", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "User deleted" });
+    const userId = req.params.id;
+
+    // 1. Remove from all board members
+    await Board.updateMany(
+      {},
+      { $pull: { members: { user: userId } } }
+    );
+
+    // 2. Remove from task assignments
+    await Task.updateMany(
+      {},
+      { $pull: { assignments: { user: userId } } }
+    );
+
+    // 3. Delete user
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: "User deleted and cleaned up from boards/tasks" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -166,7 +197,7 @@ router.delete("/users/:id", authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 // PUT /api/admin/users/:id
 // ─────────────────────────────────────────────────────────
-router.put("/users/:id", authMiddleware, async (req, res) => {
+router.put("/users/:id", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { username, email } = req.body;
     const updated = await User.findByIdAndUpdate(
@@ -186,7 +217,7 @@ router.put("/users/:id", authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 // GET /api/admin/users/:id/boards
 // ─────────────────────────────────────────────────────────
-router.get("/users/:id/boards", authMiddleware, async (req, res) => {
+router.get("/users/:id/boards", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const userId = req.params.id;
     // Find boards where user is owner or member
@@ -218,7 +249,7 @@ router.get("/users/:id/boards", authMiddleware, async (req, res) => {
 
 // ─────────────────────────────────────────────────────────
 // PUT /api/admin/users/:id/boards/:boardId/role
-router.put("/users/:id/boards/:boardId/role", authMiddleware, async (req, res) => {
+router.put("/users/:id/boards/:boardId/role", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { id: userId, boardId } = req.params;
     const { role } = req.body;

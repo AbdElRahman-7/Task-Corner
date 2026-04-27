@@ -19,7 +19,7 @@ const getBoards = async (req, res) => {
       query.isArchived = false;
     }
 
-    const boards = await Board.find(query);
+    const boards = await Board.find(query).populate("user", "username email");
     res.json(boards);
   } catch (error) {
     res.status(500).json({ message: error.message });

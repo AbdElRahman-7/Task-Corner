@@ -32,7 +32,8 @@ export default function SignupPage() {
       });
       if (!data?.token) throw new Error("Signup succeeded but no token returned.");
 
-      dispatch(loginSuccess({ user: data, token: data.token as string }));
+      const { token, ...userData } = data;
+      dispatch(loginSuccess({ user: userData, token }));
       toast.success("Account created successfully!");
       router.push("/");
     } catch (err: unknown) {
