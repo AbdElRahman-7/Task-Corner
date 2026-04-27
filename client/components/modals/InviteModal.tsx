@@ -4,9 +4,8 @@ import { apiFetch } from "@utils/api";
 import { useSelector } from "react-redux";
 import { RootState } from "@store/index";
 import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { User, Board } from "@appTypes/index";
-import { Search, UserPlus, Shield, ShieldCheck, Mail, CheckCircle, Globe } from "lucide-react";
+import { Search, UserPlus, Globe, CheckCircle, X, Mail } from "lucide-react";
 
 interface UserWithSelection extends User {
   selected?: boolean;
@@ -91,7 +90,6 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
       return;
     }
 
-    // Clean up IDs
     const cleanWorkspaceId = (workspaceId && workspaceId !== "undefined" && workspaceId !== "null" && workspaceId !== "default-workspace") ? workspaceId : undefined;
     const cleanBoardId = (selectedBoardId && selectedBoardId !== "undefined" && selectedBoardId !== "null") ? selectedBoardId : undefined;
 
@@ -144,15 +142,12 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
 
       if (successCount > 0) {
         toast.success(`Successfully invited ${successCount} user${successCount > 1 ? "s" : ""}!`);
-      }
-      if (failCount > 0) {
-        toast.error(`${failCount} invite${failCount > 1 ? "s" : ""} failed: ${lastError}`);
-      }
-
-      if (successCount > 0) {
         setManualEmail("");
         setManualName("");
         onClose();
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount} invite${failCount > 1 ? "s" : ""} failed: ${lastError}`);
       }
     } catch (error: any) {
       console.error("Bulk invite overall error:", error);
@@ -174,136 +169,128 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
   const hasManual = manualEmail.trim() !== "";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div 
-        className="bg-white dark:bg-zinc-900 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slideInUp"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="backdrop" onClick={onClose}>
+      <div className="modal modal--invite" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white dark:from-zinc-900/50 dark:to-zinc-900">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <UserPlus className="text-blue-500 w-6 h-6" />
-              {boardId || selectedBoardId ? "Invite to Board" : "Invite to Workspace"}
-            </h2>
-            <p className="text-xs md:text-sm text-gray-500 mt-1">
-              {boardId || selectedBoardId 
-                ? "Select users and assign roles for your board." 
-                : "Add new members to your workspace."}
-            </p>
+        <div className="modalHeader">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="modalTitle flex items-center gap-2">
+                <UserPlus size={24} />
+                {boardId || selectedBoardId ? "Invite to Board" : "Invite to Workspace"}
+              </h2>
+              <p className="modalSubtitle">
+                {boardId || selectedBoardId 
+                  ? "Select users and assign roles for your board." 
+                  : "Add new members to your workspace."}
+              </p>
+            </div>
+            <button onClick={onClose} className="modalClose">
+              <X size={20} />
+            </button>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
-          >
-            ✕
-          </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        <div className="inviteContent">
           {/* Left Panel: User Selection */}
-          <div className="flex-[2] flex flex-col border-r border-gray-100 dark:border-zinc-800 overflow-hidden">
-            <div className="p-4 bg-gray-50/50 dark:bg-zinc-800/30">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <div className="inviteLeft">
+            <div className="inviteSearch">
+              <div className="inviteSearch__wrapper">
+                <Search className="icon" size={16} />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder="Search existing users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-[200px]">
+            <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
-                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                   <p className="text-sm text-gray-400">Loading users...</p>
+                <div className="loaderWrapper">
+                  <div className="loaderWrapper__spinner"></div>
+                  <p>Loading users...</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-white dark:bg-zinc-900 z-10 shadow-sm">
-                      <tr className="text-[10px] uppercase text-gray-400 font-bold border-b border-gray-100 dark:border-zinc-800">
-                        <th className="p-3 w-10">Select</th>
-                        <th className="p-3">User Info</th>
-                        <th className="p-3">Assign Role</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-zinc-800/50">
-                      {filteredUsers.map((user) => (
+                <table className="userSelectTable">
+                  <thead>
+                    <tr>
+                      <th className="w-10">Select</th>
+                      <th>User Info</th>
+                      <th>Assign Role</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => {
+                      const id = user._id || user.id;
+                      return (
                         <tr 
-                          key={user._id || user.id}
-                          className={`group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors ${user.selected ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                          key={id}
+                          className={user.selected ? 'tr--selected' : ''}
                         >
-                          <td className="p-3">
+                          <td>
                             <input
                               type="checkbox"
                               checked={user.selected}
-                              onChange={() => toggleUserSelection(user._id || user.id)}
-                              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              onChange={() => toggleUserSelection(id)}
+                              className="autoDoneCheckbox"
                             />
                           </td>
-                          <td className="p-3">
+                          <td>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase">
-                                {user.username.substring(0, 2)}
+                              <div className="assignments__avatar">
+                                {user.username.substring(0, 2).toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{user.username}</div>
-                                <div className="text-[10px] text-gray-500 truncate">{user.email}</div>
+                                <div className="assignments__name">{user.username}</div>
+                                <div className="email opacity-50 text-[10px]">{user.email}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="p-3">
+                          <td>
                             <select
                               disabled={!user.selected}
                               value={user.role}
-                              onChange={(e) => updateUserRole((user._id || user.id), e.target.value as any)}
-                              className={`text-[10px] font-bold p-1.5 rounded border transition-all outline-none ${
-                                  !user.selected 
-                                  ? 'bg-gray-100 text-gray-400 border-transparent' 
-                                  : 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 cursor-pointer hover:border-blue-500'
-                              }`}
+                              onChange={(e) => updateUserRole(id, e.target.value as any)}
+                              className="assignments__roleSelect"
                             >
-                              <option value="viewer">VIEWER</option>
-                              <option value="editor">EDITOR</option>
+                              <option value="viewer">Viewer</option>
+                              <option value="editor">Editor</option>
                             </select>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
             </div>
             
-            <div className="p-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/30 dark:bg-zinc-800/20">
-              <h4 className="text-[10px] font-bold uppercase text-gray-400 mb-3 tracking-widest flex items-center gap-2">
-                <UserPlus className="w-3 h-3" />
-                Invite via Email
+            <div className="p-6 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/20 dark:bg-zinc-800/20">
+              <h4 className="sidebarSectionHeader">
+                <Mail size={14} />
+                Direct Email Invite
               </h4>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 mt-3">
                 <input
                   type="text"
                   placeholder="Name"
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                  className="formInput flex-1"
                 />
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Email address"
                   value={manualEmail}
                   onChange={(e) => setManualEmail(e.target.value)}
-                  className="flex-[2] px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                  className="formInput flex-[2]"
                 />
                 <select
                   value={manualRole}
                   onChange={(e) => setManualRole(e.target.value as any)}
-                  className="px-3 py-2 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none"
+                  className="assignments__roleSelect h-11"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="editor">Editor</option>
@@ -313,16 +300,16 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
           </div>
 
           {/* Right Panel: Settings */}
-          <div className="flex-1 bg-gray-50 dark:bg-zinc-800/50 p-6 flex flex-col border-l border-gray-100 dark:border-zinc-800 overflow-y-auto">
-            <div className="mb-6">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-blue-500" />
+          <div className="inviteRight">
+            <div>
+              <label className="sidebarSectionHeader">
+                <Globe size={14} />
                 Target Board
               </label>
               <select
                 value={selectedBoardId}
                 onChange={(e) => setSelectedBoardId(e.target.value)}
-                className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+                className="formInput"
               >
                 <option value="">Select a board...</option>
                 {boards.map((board) => (
@@ -333,48 +320,40 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
               </select>
             </div>
 
-            <div className="flex-1 space-y-4">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+            <div className="flex-1">
+              <h3 className="sidebarSectionHeader">
+                <CheckCircle size={14} />
                 Invite Summary
               </h3>
-              <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 transition-all">
-                <div className="text-4xl font-black text-blue-600 mb-1">{selectedCount + (hasManual ? 1 : 0)}</div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Recipients</div>
+              <div className="inviteSummaryCard mt-3">
+                <div className="inviteSummaryCard__count">{selectedCount + (hasManual ? 1 : 0)}</div>
+                <div className="inviteSummaryCard__label">Total Recipients</div>
               </div>
-              
-              {(selectedCount > 0 || hasManual) && (
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                  <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed italic">
-                    Invitations will be sent immediately. Users not already registered will receive a secure joining link.
-                  </p>
-                </div>
-              )}
             </div>
 
-            <div className="mt-8 space-y-3">
+            <div className="mt-auto space-y-4">
               <button
                 onClick={handleBulkInvite}
                 disabled={sending || (selectedCount === 0 && !hasManual) || (!selectedBoardId && !workspaceId)}
-                className="w-full py-4 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                className="btnSave"
               >
                 {sending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                    Processing...
+                    Sending...
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" />
-                    SEND INVITES
+                    <UserPlus size={18} />
+                    Send Invites
                   </>
                 )}
               </button>
               <button
                 onClick={onClose}
-                className="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors uppercase tracking-widest"
+                className="btnDanger btnDanger--full"
               >
-                Dismiss
+                Cancel
               </button>
             </div>
           </div>

@@ -55,7 +55,7 @@ const Header = () => {
           <Link 
             href="/main/admin/users" 
             title="User Management"
-            className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all text-gray-500 dark:text-gray-400"
+            className="adminBtn"
           >
             <Users size={20} strokeWidth={2.5} />
           </Link>

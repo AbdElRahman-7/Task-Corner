@@ -29,7 +29,7 @@ export default function UserDetailPanel({
     setBoardsError("");
     setBoards([]);
 
-    fetch(`${API}/api/admin/users/${user._id}/boards`, { headers: authHeaders() })
+    fetch(`${API}/admin/users/${user._id}/boards`, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -53,7 +53,7 @@ export default function UserDetailPanel({
         prev.map((b) => (b.boardId === boardId ? { ...b, role: newRole } : b))
       );
       try {
-        await fetch(`${API}/api/admin/users/${user._id}/boards/${boardId}/role`, {
+        await fetch(`${API}/admin/users/${user._id}/boards/${boardId}/role`, {
           method: "PUT",
           headers: authHeaders(),
           body: JSON.stringify({ role: newRole }),

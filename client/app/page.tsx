@@ -132,22 +132,16 @@ export default function Home() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-8 mb-8 border-b border-gray-200 dark:border-zinc-800 px-2">
+      <div className="homeTabs">
         <button
           onClick={() => setActiveTab("active")}
-          className={`pb-4 text-sm font-bold transition-all border-b-2 ${activeTab === "active"
-              ? "text-blue-600 border-blue-600"
-              : "text-gray-400 border-transparent hover:text-gray-600"
-            }`}
+          className={`homeTab ${activeTab === "active" ? "homeTab--active" : ""}`}
         >
           Active Boards ({activeCount})
         </button>
         <button
           onClick={() => setActiveTab("archived")}
-          className={`pb-4 text-sm font-bold transition-all border-b-2 ${activeTab === "archived"
-              ? "text-amber-600 border-amber-600"
-              : "text-gray-400 border-transparent hover:text-gray-600"
-            }`}
+          className={`homeTab homeTab--archived ${activeTab === "archived" ? "homeTab--active" : ""}`}
         >
           Archived ({archivedCount})
         </button>

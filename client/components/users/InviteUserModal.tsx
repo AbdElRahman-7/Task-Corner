@@ -34,7 +34,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
 
   const fetchBoards = async () => {
     try {
-      const res = await fetch(`${API}/api/boards?status=active`, {
+      const res = await fetch(`${API}/boards?status=active`, {
         headers: authHeaders(),
       });
       const data = await res.json();
@@ -55,7 +55,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     setError("");
     setLink("");
     try {
-      const res = await fetch(`${API}/api/admin/invite`, {
+      const res = await fetch(`${API}/admin/invite`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ name: name.trim(), email: email.trim() }),
@@ -79,7 +79,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     setCreating(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/admin/users`, {
+      const res = await fetch(`${API}/admin/users`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ 

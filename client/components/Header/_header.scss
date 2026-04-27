@@ -203,8 +203,46 @@
 }
 
 // =========================================
+// Admin Button
+// =========================================
+
+.adminBtn {
+  @include btn-ghost;
+  padding: 0.65rem;
+  border-radius: $radius-lg;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $light-text-secondary;
+  border-color: $light-border;
+  background: white;
+  transition: all $transition-bounce;
+
+  @include dark {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.05);
+    color: $dark-text-secondary;
+  }
+
+  &:hover {
+    background: rgba($brand-primary, 0.1);
+    color: $brand-primary;
+    border-color: $brand-primary;
+    transform: translateY(-2px) rotate(8deg);
+  }
+
+  @include mobile {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+// =========================================
 // Logout Button
 // =========================================
+
 
 .logoutBtn {
   display: flex;
