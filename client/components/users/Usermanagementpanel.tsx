@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { type SortColumn } from "react-data-grid";
 import { Search, Shield, UserPlus } from "lucide-react";
 import { EditForm, UserRow } from "@appTypes/index";
 import UserDetailPanel from "./UserDetailPanel";
@@ -42,8 +41,6 @@ export default function UserManagementPanel() {
   const visibleIds = useMemo(() => new Set(filteredRows.map((r) => r._id)), [filteredRows]);
 
   useEffect(() => {
-    // Keep selection consistent with current filters/search.
-    // Bulk actions should only apply to visible (filtered) users.
     setSelectedRows((prev) => {
       if (prev.size === 0) return prev;
       const next = new Set<string>();
@@ -83,26 +80,26 @@ export default function UserManagementPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 p-6 flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-violet-600/10 dark:bg-violet-600/20 rounded-2xl">
-            <Shield className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+    <div className="userManagementPanel animate-fadeIn">
+      <div className="userPanelHeader">
+        <div className="userPanelHeader__left">
+          <div className="userPanelHeader__icon">
+            <Shield size={24} strokeWidth={2.5} />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">User Management</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Control and manage system users</p>
+          <div className="userPanelHeader__title">
+            <h1>User Management</h1>
+            <p>Control and manage system users</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="userPanelHeader__actions">
           <button
             type="button"
             onClick={() => setInviteOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-2xl bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20 transition-all active:scale-95"
+            className="addUserBtn"
           >
-            <UserPlus className="w-4 h-4" />
-            Add User
+            <UserPlus size={18} strokeWidth={2.5} />
+            <span>Add User</span>
           </button>
 
           <BulkActions
@@ -116,31 +113,38 @@ export default function UserManagementPanel() {
         </div>
       </div>
 
-      <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-violet-500 transition-colors" />
+      <div className="userSearch group">
+        <Search className="userSearch__icon" />
         <input
           type="text"
           placeholder="Search for any user by name or email address..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3.5 text-sm rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all shadow-sm"
+          className="userSearch__input"
         />
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="userGridWrapper">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-4 text-gray-400">
-            <div className="w-10 h-10 border-3 border-gray-200 border-t-violet-600 rounded-full animate-spin" />
-            <p className="text-sm font-medium">Fetching secure user data...</p>
+          <div className="loaderWrapper">
+            <div className="loaderWrapper__spinner" />
+            <p>Fetching secure user data...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-4 text-center p-6 bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/20">
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-2xl"><Shield className="w-6 h-6 text-red-600 dark:text-red-400" /></div>
-            <div>
-              <p className="font-bold text-gray-900 dark:text-white">Request Failed</p>
-              <p className="text-sm text-red-500 dark:text-red-400 mt-1">{error}</p>
+          <div className="errorWrapper">
+            <div className="errorWrapper__icon">
+              <Shield size={32} />
             </div>
-            <button type="button" onClick={refreshRows} className="mt-2 px-6 py-2.5 text-sm font-bold rounded-xl bg-gray-900 dark:bg-white text-white dark:text-zinc-950 hover:opacity-90 transition-all active:scale-95">
+            <div>
+              <p className="errorWrapper__title">Request Failed</p>
+              <p className="errorWrapper__message">{error}</p>
+            </div>
+            <button 
+              type="button" 
+              onClick={refreshRows} 
+              className="addUserBtn"
+              style={{ background: '#0f172a' }}
+            >
               Try Again
             </button>
           </div>

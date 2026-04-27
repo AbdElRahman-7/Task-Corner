@@ -1,0 +1,206 @@
+@use "variables" as *;
+@use "mixins" as *;
+@use "animations" as *;
+
+.userManagementPanel {
+  min-height: 100vh;
+  background: $light-bg;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  @include dark {
+    background: $dark-bg;
+  }
+
+  @include mobile {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+}
+
+.userPanelHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__icon {
+    padding: 0.75rem;
+    background: rgba($brand-primary, 0.1);
+    border-radius: $radius-xl;
+    color: $brand-primary;
+
+    @include dark {
+      background: rgba($brand-primary, 0.2);
+    }
+  }
+
+  &__title {
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 950;
+      letter-spacing: -0.03em;
+      color: $light-text-primary;
+      margin: 0;
+      @include dark { color: $dark-text-primary; }
+    }
+
+    p {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $light-text-secondary;
+      margin-top: 0.25rem;
+      @include dark { color: $dark-text-secondary; }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+.addUserBtn {
+  @include btn-primary;
+  padding: 0.75rem 1.5rem;
+  border-radius: $radius-xl;
+  background: linear-gradient(135deg, $brand-primary 0%, $brand-secondary 100%);
+  box-shadow: $glow-primary;
+
+  @include mobile {
+    flex: 1;
+  }
+}
+
+.userSearch {
+  position: relative;
+  width: 100%;
+  
+  &__icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.1rem;
+    height: 1.1rem;
+    color: $light-text-muted;
+    pointer-events: none;
+    transition: color $transition-base;
+  }
+
+  &__input {
+    @include input-base;
+    padding: 1rem 1rem 1rem 3.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: $radius-xl;
+    background: $light-surface;
+    box-shadow: $shadow-sm;
+
+    &:focus {
+      + .userSearch__icon {
+        color: $brand-primary;
+      }
+    }
+
+    @include dark {
+      background: $dark-surface;
+    }
+  }
+}
+
+.userGridWrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+.loaderWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  gap: 1rem;
+  color: $light-text-muted;
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba($brand-primary, 0.1);
+    border-top-color: $brand-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: rgba($brand-danger, 0.05);
+  border-radius: $radius-xl;
+  border: 1px solid rgba($brand-danger, 0.1);
+  text-align: center;
+  gap: 1.5rem;
+
+  &__icon {
+    padding: 1rem;
+    background: rgba($brand-danger, 0.1);
+    border-radius: $radius-xl;
+    color: $brand-danger;
+  }
+
+  &__title {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: $light-text-primary;
+    @include dark { color: $dark-text-primary; }
+  }
+
+  &__message {
+    font-size: 0.9rem;
+    color: $brand-danger;
+    margin-top: 0.25rem;
+  }
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: $light-surface;
+  border: 1px solid $light-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+
+  @include dark {
+    background: $dark-surface-2;
+    border-color: $dark-border;
+  }
+}

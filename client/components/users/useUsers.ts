@@ -31,7 +31,7 @@ export function useUsers() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/admin/users`, { headers: authHeaders() });
+      const res = await fetch(`${API}/admin/users`, { headers: authHeaders() });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       setUsers(data.users);
@@ -48,7 +48,7 @@ export function useUsers() {
 
   const deleteUser = async (id: string) => {
     try {
-      const res = await fetch(`${API}/api/admin/users/${id}`, {
+      const res = await fetch(`${API}/admin/users/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
       });
@@ -64,7 +64,7 @@ export function useUsers() {
 
   const bulkDeleteUsers = async (ids: string[]) => {
     try {
-      const res = await fetch(`${API}/api/admin/users/bulk`, {
+      const res = await fetch(`${API}/admin/users/bulk`, {
         method: "DELETE",
         headers: authHeaders(),
         body: JSON.stringify({ ids }),
@@ -81,7 +81,7 @@ export function useUsers() {
 
   const updateUser = async (id: string, form: EditForm) => {
     try {
-      const res = await fetch(`${API}/api/admin/users/${id}`, {
+      const res = await fetch(`${API}/admin/users/${id}`, {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify(form),

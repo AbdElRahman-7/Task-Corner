@@ -163,7 +163,60 @@
     line-height: 1.5;
     @include dark { color: $dark-text-secondary; }
   }
+
+  .modalSubtitleList {
+    color: $brand-primary;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
 }
+
+.modalTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  .modalHeaderIcon {
+    color: $brand-primary;
+    opacity: 0.8;
+  }
+}
+
+.modalTitleInput {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 1.75rem;
+  font-weight: 950;
+  color: $light-text-primary;
+  padding: 0.4rem 0.75rem;
+  margin-left: -0.75rem;
+  border-radius: $radius-lg;
+  transition: all $transition-base;
+  width: 100%;
+
+  @include dark { color: $dark-text-primary; }
+
+  &:focus {
+    outline: none;
+    background: rgba($brand-primary, 0.03);
+    border-color: rgba($brand-primary, 0.15);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    @include dark { background: rgba(255, 255, 255, 0.03); }
+  }
+
+  &:hover:not(:focus):not(:disabled) {
+    background: rgba($brand-primary, 0.02);
+  }
+
+  @include mobile {
+    font-size: 1.4rem;
+  }
+}
+
 
 .sectionHeader {
   display: flex;
@@ -1138,3 +1191,273 @@
     @include dark { background: rgba($brand-primary, 0.2); }
   }
 }
+
+.divider {
+  height: 1px;
+  background: $light-border;
+  margin: 2rem 0;
+  @include dark { background: rgba(255, 255, 255, 0.05); }
+}
+
+.suggestionMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: $light-surface;
+  border: 1px solid $light-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-premium;
+  margin-top: 0.5rem;
+  z-index: 100;
+  overflow: hidden;
+  animation: springIn 0.4s $ease-out-expo;
+
+  @include dark {
+    background: $dark-surface-2;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &__header {
+    padding: 0.75rem 1rem;
+    font-size: 0.65rem;
+    font-weight: 1000;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: $light-text-muted;
+    background: rgba($brand-primary, 0.03);
+    border-bottom: 1px solid $light-border;
+    @include dark { border-bottom-color: rgba(255, 255, 255, 0.05); }
+  }
+
+  &__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: all $transition-base;
+    border-bottom: 1px solid rgba($light-border, 0.5);
+
+    &:last-child { border-bottom: none; }
+
+    &:hover {
+      background: rgba($brand-primary, 0.05);
+      transform: translateX(4px);
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba($brand-primary, 0.1);
+      color: $brand-primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 950;
+      font-size: 0.8rem;
+    }
+
+    .info {
+      flex: 1;
+      min-width: 0;
+      .name {
+        display: block;
+        font-weight: 900;
+        font-size: 0.9rem;
+        color: $light-text-primary;
+        @include dark { color: white; }
+      }
+      .email {
+        display: block;
+        font-size: 0.75rem;
+        color: $light-text-muted;
+      }
+    }
+  }
+}
+
+
+// =========================================
+// Invite Modal specific
+// =========================================
+
+.modal--invite {
+  max-width: 1100px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .modalHeader {
+    padding: 1.75rem 2.5rem;
+    margin-bottom: 0;
+    background: linear-gradient(to right, rgba($brand-primary, 0.03), transparent);
+    border-bottom: 1px solid $light-border;
+
+    @include dark {
+      background: linear-gradient(to right, rgba($brand-primary, 0.08), transparent);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+}
+
+.inviteContent {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+
+  @include laptop {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
+
+.inviteLeft {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid $light-border;
+  background: $light-surface;
+
+  @include dark {
+    border-color: rgba(255, 255, 255, 0.05);
+    background: $dark-surface;
+  }
+
+  @include laptop {
+    border-right: none;
+    border-bottom: 1px solid $light-border;
+  }
+}
+
+.inviteRight {
+  flex: 1;
+  padding: 2.5rem;
+  background: $light-bg;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  @include dark {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  @include laptop {
+    padding: 1.5rem;
+  }
+}
+
+.userSelectTable {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th {
+    position: sticky;
+    top: 0;
+    background: $light-surface;
+    z-index: 10;
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $light-text-muted;
+    border-bottom: 1px solid $light-border;
+
+    @include dark {
+      background: $dark-surface;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba($light-border, 0.5);
+    transition: all $transition-fast;
+
+    @include dark {
+      border-color: rgba(255, 255, 255, 0.03);
+    }
+  }
+
+  tr:hover td {
+    background: rgba($brand-primary, 0.03);
+  }
+
+  tr--selected td {
+    background: rgba($brand-primary, 0.06);
+  }
+}
+
+.inviteSummaryCard {
+  background: $light-surface;
+  padding: 1.5rem;
+  border-radius: $radius-xl;
+  border: 1px solid $light-border;
+  box-shadow: $shadow-sm;
+  transition: all $transition-bounce;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $brand-primary;
+  }
+
+  @include dark {
+    background: $dark-surface-2;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  &__count {
+    font-size: 2.5rem;
+    font-weight: 1000;
+    color: $brand-primary;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $light-text-muted;
+  }
+}
+
+.inviteSearch {
+  padding: 1.25rem;
+  background: rgba($light-bg, 0.5);
+  border-bottom: 1px solid $light-border;
+
+  @include dark {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  &__wrapper {
+    position: relative;
+    
+    .icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $light-text-muted;
+      pointer-events: none;
+    }
+
+    input {
+      @include input-base;
+      padding-left: 2.75rem;
+      border-radius: $radius-lg;
+    }
+  }
+}

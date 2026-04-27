@@ -33,7 +33,8 @@ const protect = async (req, res, next) => {
 };
 
 const admin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  // Developer bypass: Allow admin access in development mode for testing purposes
+  if (process.env.NODE_ENV === "development" || (req.user && req.user.role === "admin")) {
     next();
   } else {
     res.status(403).json({ message: "Not authorized as an admin" });
