@@ -1,4 +1,7 @@
-export const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+import { API_BASE_URL } from "@/utils/api";
+
+export const API = API_BASE_URL;
+
 
 export const getToken = () => {
   if (typeof window === "undefined") return "";
