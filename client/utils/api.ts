@@ -1,6 +1,5 @@
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, ""); // Remove trailing slashes for consistency
-
+const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+export const API_BASE_URL = (rawBaseUrl || "").replace(/\/+$/, "");
 
 function getAuthTokenFromStorage(): string | null {
   if (typeof window === "undefined") return null;
