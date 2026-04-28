@@ -113,7 +113,7 @@ router.post("/:token/accept", protect, async (req, res) => {
       if (!workspace) {
         return res.status(404).json({ message: "Workspace no longer exists" });
       }
-      if (!workspace.members.some(m => m.user.toString() === user._id.toString())) {
+      if (!workspace.members.some(m => m.user?.toString() === user._id.toString())) {
         workspace.members.push({ user: user._id, role: invite.role || "viewer" });
         await workspace.save();
       }
@@ -128,7 +128,7 @@ router.post("/:token/accept", protect, async (req, res) => {
       if (!board) {
         return res.status(404).json({ message: "Board no longer exists" });
       }
-      if (!board.members.some(m => m.user.toString() === user._id.toString())) {
+      if (!board.members.some(m => m.user?.toString() === user._id.toString())) {
         board.members.push({ user: user._id, role: invite.role || "viewer" });
         await board.save();
       }

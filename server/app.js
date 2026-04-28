@@ -18,16 +18,22 @@ const corsOptions = {
       .map((u) => u.trim())
       .filter(Boolean);
 
-    if (!origin) return callback(null, true);
+    // Always allow any origin during development to avoid IP vs localhost mismatches
+    if (process.env.NODE_ENV !== "production" || !origin) {
+       return callback(null, true);
+    }
 
     if (
       allowed.length === 0 ||
       allowed.includes("*") ||
-      allowed.includes(origin)
+      allowed.includes(origin) ||
+      origin.startsWith("http://localhost:") ||
+      origin.endsWith(".vercel.app")
     ) {
       return callback(null, true);
     }
 
+    console.error(`CORS blocked request from origin: ${origin}`);
     callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
@@ -36,7 +42,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.options(/.*/, cors(corsOptions));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
