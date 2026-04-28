@@ -23,7 +23,7 @@ router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
     const usersWithStats = users.map((user) => {
       const userBoards = allBoards.filter(b => 
         b.user?.toString() === user._id.toString() || 
-        b.members?.some(m => m.user?.toString() === user._id.toString())
+        b.members?.some(m => m?.user?.toString() === user._id.toString())
       );
       
       const boardIds = userBoards.map(b => b._id.toString());

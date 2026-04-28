@@ -30,8 +30,8 @@ const registerUser = async (req, res) => {
         if (board) {
           // Add user to board members if not already there
           if (!Array.isArray(board.members)) board.members = [];
-          if (!board.members.includes(user._id)) {
-            board.members.push(user._id);
+          if (!board.members.some(m => m.user?.toString() === user._id.toString())) {
+            board.members.push({ user: user._id, role: "viewer" });
             await board.save();
           }
         }
@@ -68,8 +68,8 @@ const loginUser = async (req, res) => {
         const board = await Board.findById(invite.boardId);
         if (board) {
           if (!Array.isArray(board.members)) board.members = [];
-          if (!board.members.includes(user._id)) {
-            board.members.push(user._id);
+          if (!board.members.some(m => m.user?.toString() === user._id.toString())) {
+            board.members.push({ user: user._id, role: "viewer" });
             await board.save();
           }
         }

@@ -80,7 +80,7 @@ const createBoard = async (req, res) => {
         if (user) {
           // If user exists, add them directly if they aren't already added
           const isAlreadyMember = board.members.some(
-            (member) => member.user.toString() === user._id.toString()
+            (member) => member.user?.toString() === user._id.toString()
           );
           if (!isAlreadyMember) {
             board.members.push({ user: user._id, role: m.role || "viewer" });
@@ -187,7 +187,7 @@ const updateMemberRole = async (req, res) => {
     const board = await Board.findOne({ _id: boardId, user: req.user._id });
     if (!board) return res.status(403).json({ message: "Only owners can change roles" });
 
-    const memberIndex = board.members.findIndex(m => m.user.toString() === userId);
+    const memberIndex = board.members.findIndex(m => m.user?.toString() === userId);
     if (memberIndex === -1) return res.status(404).json({ message: "Member not found" });
 
     board.members[memberIndex].role = role;
@@ -214,7 +214,7 @@ const removeMember = async (req, res) => {
       return res.status(400).json({ message: "Cannot remove the board owner" });
     }
 
-    board.members = board.members.filter(m => m.user.toString() !== userId);
+    board.members = board.members.filter(m => m.user?.toString() !== userId);
     await board.save();
 
     const updatedBoard = await Board.findById(boardId).populate("members.user", "username email");

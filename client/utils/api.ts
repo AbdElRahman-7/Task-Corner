@@ -1,6 +1,6 @@
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, ""); // Remove trailing slashes for consistency
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://task-corner.onrender.com/api";
 
+console.log("API_BASE_URL:", API_BASE_URL);
 
 function getAuthTokenFromStorage(): string | null {
   if (typeof window === "undefined") return null;
@@ -23,7 +23,7 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
   const { token, auth, ...fetchOptions } = options;
 
   const effectiveToken =
-    auth === true ? (token ?? getAuthTokenFromStorage()) : token ?? null;
+    auth === true ? (token ?? getAuthTokenFromStorage()) : (token ?? null);
 
   const headers = {
     "Content-Type": "application/json",
@@ -40,7 +40,6 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
 
   if (!response.ok) {
     if (response.status === 401 && typeof window !== "undefined") {
-      // Auto-logout on unauthorized
       localStorage.removeItem("taskcorner_state");
       window.location.href = "/main/auth/login";
     }
@@ -49,15 +48,21 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
       let error;
       try {
         error = await response.json();
-      } catch (e) {
+      } catch {
         error = null;
       }
-      const errorMessage = error?.message || error?.error || (typeof error === 'string' ? error : null) || `Request failed with status ${response.status}`;
+      const errorMessage =
+        error?.message ||
+        error?.error ||
+        (typeof error === "string" ? error : null) ||
+        `Request failed with status ${response.status}`;
       throw new Error(errorMessage);
     } else {
       const text = await response.text();
       console.error("API Error (Non-JSON):", text);
-      throw new Error(`Server returned an error (${response.status}). Please check if the backend is running and the route is correct.`);
+      throw new Error(
+        `Server returned an error (${response.status}). Please check if the backend is running and the route is correct.`
+      );
     }
   }
 

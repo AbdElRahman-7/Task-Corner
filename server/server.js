@@ -19,6 +19,7 @@ mongoose
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`Loaded CLIENT_URL: ${process.env.CLIENT_URL}`); // Restarting to apply Express 5 wildcard fix
     });
   })
   .catch((error) => {
