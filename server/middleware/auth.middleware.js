@@ -13,7 +13,10 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret");
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "default_secret",
+      );
 
       req.user = await User.findById(decoded.id).select("-password");
       if (!req.user) {
@@ -33,12 +36,25 @@ const protect = async (req, res, next) => {
 };
 
 const admin = (req, res, next) => {
-  // Developer bypass: Allow admin access in development mode for testing purposes
-  if (process.env.NODE_ENV === "development" || (req.user && req.user.role === "admin")) {
+  console.log("[ADMIN CHECK] NODE_ENV:", process.env.NODE_ENV);
+  console.log(
+    "[ADMIN CHECK] user:",
+    req.user?.email,
+    "| role:",
+    req.user?.role,
+  );
+
+  if (
+    process.env.NODE_ENV === "development" ||
+    (req.user && req.user.role === "admin")
+  ) {
     next();
   } else {
-    res.status(403).json({ message: "Not authorized as an admin" });
+    res.status(403).json({
+    
+      message: "Not authorized as an admin",
+      debug: { role: req.user?.role, env: process.env.NODE_ENV }, 
+    });
   }
 };
-
 module.exports = { protect, admin };

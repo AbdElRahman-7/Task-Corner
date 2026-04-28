@@ -16,20 +16,19 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("Connected to MongoDB");
-
-    // TEMPORARY: Automatically upgrade all users to admin so you don't have to run scripts!
-    try {
-      const User = require('./models/user.model');
+    const User = require("./models/user.model");
+    const adminCount = await User.countDocuments({ role: "admin" });
+    if (adminCount === 0) {
       await User.updateMany({}, { role: "admin" });
-      console.log("SUCCESS: All users have been upgraded to Admin in the database!");
-    } catch (e) {
-      console.error("Failed to upgrade users:", e);
+      console.log("No admins found — upgraded all users to admin.");
+    } else {
+      console.log(`Admin users found: ${adminCount}`);
     }
 
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`Loaded CLIENT_URL: ${process.env.CLIENT_URL}`); // Restarting to apply Express 5 wildcard fix
+      console.log(`Loaded CLIENT_URL: ${process.env.CLIENT_URL}`);
     });
   })
   .catch((error) => {
