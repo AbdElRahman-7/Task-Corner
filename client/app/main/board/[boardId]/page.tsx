@@ -54,19 +54,24 @@ export default function BoardPage({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     if (boardId) {
-      dispatch(loadBoardData(boardId));
+      setIsLoading(true);
+      dispatch(loadBoardData(boardId)).finally(() => {
+        setIsLoading(false);
+      });
     }
   }, [boardId, dispatch]);
 
   const isEditor = useMemo(() => {
     if (!board || !currentUser) return false;
-    const ownerId = typeof board.owner === 'object' ? board.owner._id : board.owner;
+    const ownerId = typeof board.owner === 'object' && board.owner !== null ? (board.owner as { _id: string })._id : board.owner;
     if (ownerId === currentUser._id) return true;
 
     return board.members?.some(m => {
-      const mUserId = typeof m.user === 'object' ? m.user._id : m.user;
+      const mUserId = typeof m.user === 'object' && m.user !== null ? (m.user as { _id: string })._id : m.user;
       return mUserId === currentUser._id && m.role === 'editor';
     });
   }, [board, currentUser]);
@@ -75,6 +80,14 @@ export default function BoardPage({
     setSelectedTask(task);
     setSelectedListId(listId);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   if (!board) {
     return (
