@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@store/index";
-import { addCustomList, moveTask, reorderLists, loadBoardData, moveTaskDB } from "@store/boardSlice";
+import { moveTask, reorderLists, loadBoardData, moveTaskDB, addListDB } from "@store/boardSlice";
 import Link from "next/link";
 import ListCard from "@components/cards/ListCard";
 import TaskCard from "@components/cards/TaskCard";
@@ -189,7 +189,7 @@ export default function BoardPage({
     }
     const title = newListTitle.trim();
     if (!title) return;
-    dispatch(addCustomList({ boardId, title }));
+    dispatch(addListDB({ boardId: boardId as string, title }));
     toast.success(`List "${title}" created!`);
     setNewListTitle("");
   };

@@ -100,6 +100,20 @@ export const addTaskDB = createAsyncThunk(
   },
 );
 
+export const addListDB = createAsyncThunk(
+  "lists/add",
+  async ({ boardId, title }: { boardId: string; title: string }, thunkAPI) => {
+    const state = thunkAPI.getState() as RootState;
+    const token = state.auth.token;
+    return await apiFetch("/lists", {
+      method: "POST",
+      body: JSON.stringify({ boardId, title }),
+      token,
+      auth: true,
+    });
+  }
+);
+
 export const updateTaskDB = createAsyncThunk(
   "tasks/update",
   async ({ id, updates }: { id: string; updates: Partial<Task> }, thunkAPI) => {
@@ -524,6 +538,18 @@ const boardSlice = createSlice({
         state.tasks[task._id] = normalizeApiTask(task);
         if (state.lists[task.listId]) {
           state.lists[task.listId].taskIds.push(task._id);
+        }
+      })
+      .addCase(addListDB.fulfilled, (state, action) => {
+        const list = action.payload as ApiList;
+        state.lists[list._id] = {
+          id: list._id,
+          title: list.title,
+          boardId: list.boardId,
+          taskIds: [],
+        };
+        if (state.boards[list.boardId]) {
+          state.boards[list.boardId].listIds.push(list._id);
         }
       })
       .addCase(updateTaskDB.fulfilled, (state, action) => {
