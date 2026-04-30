@@ -513,8 +513,6 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
                     <Save size={18} />
                     Save Changes
                   </button>
-
-
                   <button onClick={handleDelete} className="btnDanger btnDanger--full">
                     <Trash2 size={16} />
                     Delete Task
