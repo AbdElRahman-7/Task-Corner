@@ -300,7 +300,6 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
               </select>
             </div>
 
-            {/* Summary — flex:1 so it fills space and pushes actions down */}
             <div className="inviteRight__grow">
               <h3 className="sidebarSectionHeader">
                 <CheckCircle size={14} />
@@ -313,17 +312,10 @@ export default function InviteModal({ boardId, workspaceId, isOpen, onClose }: I
                 <div className="inviteSummaryCard__label">Total Recipients</div>
 
                 {(selectedCount > 0 || hasManual) && (
-                  <div className="flex justify-center gap-4 mt-4 pt-3 border-t border-black/5 dark:border-white/5">
-                    {selectedCount > 0 && (
-                      <span className="text-[0.65rem] font-bold uppercase opacity-60">
-                        {selectedCount} from list
-                      </span>
-                    )}
-                    {hasManual && (
-                      <span className="text-[0.65rem] font-bold uppercase opacity-60">
-                        1 via email
-                      </span>
-                    )}
+                  <div className="mt-1 opacity-50 text-[0.6rem] font-bold uppercase">
+                    {selectedCount > 0 && <span>{selectedCount} from list</span>}
+                    {selectedCount > 0 && hasManual && <span className="mx-1">•</span>}
+                    {hasManual && <span>1 via email</span>}
                   </div>
                 )}
               </div>

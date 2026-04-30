@@ -1686,7 +1686,18 @@ body.modal-open ::-webkit-scrollbar {
   flex-direction: column;
   gap: 0.75rem;
   border-bottom-right-radius: $radius-xl;
-  overflow-y:auto;
+  overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba($brand-primary, 0.2);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
   @include dark {
     background: rgba(0, 0, 0, 0.15);
@@ -1799,7 +1810,7 @@ body.modal-open ::-webkit-scrollbar {
 
 .inviteSummaryCard {
   background: $light-surface;
-  padding: 1.5rem 1.5rem;
+  padding: 0.75rem;
   border-radius: $radius-xl;
   border: 1px solid $light-border;
   box-shadow: $shadow-md;
@@ -1807,6 +1818,10 @@ body.modal-open ::-webkit-scrollbar {
   text-align: center;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 90px;
 
   &::before {
     content: "";
@@ -1814,7 +1829,6 @@ body.modal-open ::-webkit-scrollbar {
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
     background: linear-gradient(90deg, $brand-primary, $brand-secondary);
   }
 
@@ -1831,11 +1845,11 @@ body.modal-open ::-webkit-scrollbar {
   }
 
   &__count {
-    font-size: 3.5rem;
+    font-size: 1.75rem;
     font-weight: 1000;
     color: $brand-primary;
     line-height: 1;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.15rem;
     letter-spacing: -0.05em;
 
     @include dark {
