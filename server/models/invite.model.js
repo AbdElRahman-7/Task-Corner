@@ -5,6 +5,7 @@ const inviteSchema = new mongoose.Schema({
   name: { type: String },
   boardId: { type: mongoose.Schema.Types.ObjectId, ref: "Board" },
   workspaceId: { type: mongoose.Schema.Types.ObjectId, ref: "Workspace" },
+  taskId: { type: mongoose.Schema.Types.ObjectId, ref: "Task" },
   token: { type: String, required: true },
   role: { type: String, enum: ["viewer", "editor"], default: "viewer" },
   status: { type: String, enum: ["pending", "accepted"], default: "pending" },

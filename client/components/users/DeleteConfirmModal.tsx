@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -19,29 +19,39 @@ export default function DeleteConfirmModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1100] flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-700 w-full max-w-sm shadow-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-xl">
-            <Trash2 className="w-5 h-5 text-red-500" />
+    <div className="backdrop" onClick={onClose}>
+      <div 
+        className="modal modal--small" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="modalClose" onClick={onClose} aria-label="Close modal">
+          <X size={20} />
+        </button>
+
+        <div className="modalHeader">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-red-500/10 p-2.5 rounded-xl text-red-500">
+              <Trash2 size={24} />
+            </div>
+            <h2 className="modalTitle !mb-0">{title}</h2>
           </div>
-          <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
+          <p className="modalSubtitle">{message}</p>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{message}</p>
-        <div className="flex gap-2 justify-end">
+
+        <div className="modalActions">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+            className="btnSecondary"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors"
+            className="btnPrimary !bg-red-500 !shadow-red-500/20"
           >
-            Delete
+            Delete Permanently
           </button>
         </div>
       </div>

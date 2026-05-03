@@ -49,15 +49,20 @@ const Board = ({ board, onDelete, onArchive }: BoardProps) => {
             
             <div className="avatarStack">
               {board.members?.slice(0, 5).map((member, i) => {
-                const user = typeof member.user === 'object' ? member.user : null;
+                const user = typeof member.user === 'object' && member.user !== null
+                  ? member.user
+                  : null;
+                // If user isn't populated yet (raw string ID), skip rendering
+                // rather than crashing — the backend fix makes this rare.
                 if (!user) return null;
+                const initials = user.username.substring(0, 2).toUpperCase();
                 return (
                   <div 
-                    key={user._id || (user as any).id} 
+                    key={user._id || (user as any).id || i} 
                     title={`${user.username} (${member.role})`}
                     className="avatarStack__item"
                   >
-                    {user.username.substring(0, 2).toUpperCase()}
+                    {initials}
                   </div>
                 );
               })}

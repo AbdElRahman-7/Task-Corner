@@ -1,4 +1,8 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://task-corner.onrender.com/api";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "https://task-corner.onrender.com/api");
 
 console.log("API_BASE_URL:", API_BASE_URL);
 
@@ -22,6 +26,9 @@ interface ApiOptions extends RequestInit {
 export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
   const { token, auth, ...fetchOptions } = options;
 
+  // Ensure endpoint starts with /
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
   const effectiveToken =
     auth === true ? (token ?? getAuthTokenFromStorage()) : (token ?? null);
 
@@ -31,7 +38,7 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
     ...fetchOptions,
     headers,
   });
@@ -61,7 +68,7 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
       const text = await response.text();
       console.error("API Error (Non-JSON):", text);
       throw new Error(
-        `Server returned an error (${response.status}). Please check if the backend is running and the route is correct.`
+        `Server returned an error (${response.status}). Please check if the backend is running and the route is correct.`,
       );
     }
   }

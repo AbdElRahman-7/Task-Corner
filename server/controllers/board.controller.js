@@ -19,7 +19,9 @@ const getBoards = async (req, res) => {
       query.isArchived = false;
     }
 
-    const boards = await Board.find(query).populate("user", "username email");
+    const boards = await Board.find(query)
+      .populate("user", "username email")
+      .populate("members.user", "username email");
     res.json(boards);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,10 +65,9 @@ const getBoardData = async (req, res) => {
 
     const listIds = lists.map((l) => l._id);
 
-    const tasks = await Task.find({ listId: { $in: listIds } }).populate(
-      "assignments.user",
-      "username email"
-    );
+    const tasks = await Task.find({ listId: { $in: listIds } })
+      .populate("assignments.user", "username email")
+      .populate("listId", "title");
 
     const invites = await Invite.find({ boardId, status: "pending" });
 
