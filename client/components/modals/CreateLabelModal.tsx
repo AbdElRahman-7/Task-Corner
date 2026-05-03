@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
 interface CreateLabelModalProps {
   isOpen: boolean;
@@ -51,94 +52,81 @@ const CreateLabelModal = ({ isOpen, onClose, onCreate }: CreateLabelModalProps) 
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-110 flex items-center justify-center p-3 sm:p-4 bg-amber-950/40 backdrop-blur-sm animate-in fade-in duration-300"
-      onClick={onClose}
-    >
+    <div className="backdrop" onClick={onClose}>
       <div 
-        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-amber-50 dark:bg-slate-900 shadow-2xl p-4 sm:p-8 border border-amber-200 dark:border-slate-800 animate-in zoom-in-95 duration-300"
+        className="modal modal--small createLabelModal"
         onClick={(e) => e.stopPropagation()}
       >
-        <div 
-          className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500"
-          style={{ backgroundColor: selectedColor }}
-        ></div>
+        <button className="modalClose" onClick={onClose} aria-label="Close modal">
+          <X size={20} />
+        </button>
 
-        <div className="relative">
-          <h2 className="text-xl font-bold text-amber-900 dark:text-yellow-100 mb-2">
-            Create Label
-          </h2>
-          <p className="text-amber-800/60 dark:text-yellow-100/60 text-xs mb-6 font-medium">
-            Give your tasks a clear visual category.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-            <div>
-              <label 
-                htmlFor="label-title" 
-                className="block text-[10px] font-bold uppercase tracking-widest text-amber-900 dark:text-yellow-100 mb-2 opacity-50"
-              >
-                Label Name
-              </label>
-              <input
-                id="label-title"
-                autoFocus
-                type="text"
-                placeholder="e.g. Critical, Feature, Design"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white dark:bg-slate-800 border-2 border-amber-100 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-amber-950 dark:text-white placeholder-amber-900/30 dark:placeholder-white/20 focus:outline-none focus:border-yellow-500 transition-all shadow-inner"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-amber-900 dark:text-yellow-100 mb-3 opacity-50">
-                Select Color
-              </label>
-              <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
-                {PRESET_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setSelectedColor(color)}
-                    className={`group relative w-full aspect-square rounded-lg transition-all duration-200 hover:scale-110 active:scale-90 ${
-                      selectedColor === color ? 'ring-2 ring-offset-2 ring-yellow-400 dark:ring-yellow-100 dark:ring-offset-slate-900 scale-110' : 'opacity-80 hover:opacity-100'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  >
-                    {selectedColor === color && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"></div>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-yellow-100 font-bold text-xs hover:bg-amber-200 dark:hover:bg-slate-700 transition-all active:scale-95"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!title.trim()}
-                className="flex-2 px-4 py-3 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
-                style={{ 
-                  backgroundColor: selectedColor,
-                  color: "#fff",
-                  boxShadow: `0 10px 15px -3px ${selectedColor}33`
-                }}
-              >
-                Create Label
-              </button>
-            </div>
-          </form>
+        <div className="modalHeader">
+          <h2 className="modalTitle">Create Label</h2>
+          <p className="modalSubtitle">Give your tasks a clear visual category.</p>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="formGroup">
+            <label htmlFor="label-title" className="formLabel">
+              Label Name
+            </label>
+            <input
+              id="label-title"
+              autoFocus
+              type="text"
+              placeholder="e.g. Critical, Feature, Design"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="formInput"
+              required
+            />
+          </div>
+
+          <div className="formGroup">
+            <label className="formLabel">Select Color</label>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {PRESET_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setSelectedColor(color)}
+                  className={`relative w-full aspect-square rounded-lg transition-all duration-200 hover:scale-110 active:scale-90 ${
+                    selectedColor === color ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-slate-900 scale-110 shadow-lg' : 'opacity-80'
+                  }`}
+                  style={{ backgroundColor: color }}
+                >
+                  {selectedColor === color && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"></div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="modalActions">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btnSecondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!title.trim()}
+              className="btnPrimary"
+              style={{ 
+                backgroundColor: selectedColor,
+                boxShadow: `0 10px 15px -3px ${selectedColor}33`
+              }}
+            >
+              Create Label
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

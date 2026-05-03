@@ -13,12 +13,13 @@ const router = express.Router();
 // @access  Private
 router.post("/", protect, async (req, res) => {
   try {
-    const { email, boardId, workspaceId, role } = req.body;
-    console.log("Incoming Invite:", { email, boardId, workspaceId });
+    const { email, boardId, workspaceId, taskId, role } = req.body;
+    console.log("Incoming Invite:", { email, boardId, workspaceId, taskId });
 
     const bId = (boardId && boardId !== "undefined" && boardId !== "null") ? boardId : null;
     const wId = (workspaceId && workspaceId !== "undefined" && workspaceId !== "null") ? workspaceId : null;
-    console.log("Sanitized IDs:", { bId, wId });
+    const tId = (taskId && taskId !== "undefined" && taskId !== "null") ? taskId : null;
+    console.log("Sanitized IDs:", { bId, wId, tId });
 
     if (!email || (!bId && !wId)) {
       return res.status(400).json({ message: "Email and either Board ID or Workspace ID are required" });
@@ -32,10 +33,15 @@ router.post("/", protect, async (req, res) => {
       return res.status(400).json({ message: "Invalid Workspace ID" });
     }
 
+    if (tId && !mongoose.Types.ObjectId.isValid(tId)) {
+      return res.status(400).json({ message: "Invalid Task ID" });
+    }
+
     // Check if an invite already exists for this email and target
     const query = { email, status: "pending" };
     if (bId) query.boardId = bId;
     if (wId) query.workspaceId = wId;
+    if (tId) query.taskId = tId;
 
     const existingInvite = await Invite.findOne(query);
     if (existingInvite) {
@@ -51,6 +57,7 @@ router.post("/", protect, async (req, res) => {
       email,
       boardId: bId || undefined,  
       workspaceId: wId || undefined,
+      taskId: tId || undefined,
       token,
       role: role || "viewer",
     });
@@ -134,6 +141,22 @@ router.post("/:token/accept", protect, async (req, res) => {
       }
       responseMessage = "Successfully joined the board";
       redirectId = board._id;
+
+      // Handle Task Assignment if taskId is present
+      if (invite.taskId) {
+        const Task = mongoose.model('Task');
+        const task = await Task.findById(invite.taskId);
+        if (task) {
+          const isAlreadyAssigned = task.assignments.some(a => a.user?.toString() === user._id.toString());
+          if (!isAlreadyAssigned) {
+            const taskRole = invite.role === "editor" ? "editor" : "viewer";
+            const perms = invite.role === "editor" ? { allActions: true } : {};
+            task.assignments.push({ user: user._id, role: taskRole, permissions: perms });
+            await task.save();
+          }
+          responseMessage = `Successfully joined the board and assigned to task: ${task.title}`;
+        }
+      }
     }
 
     invite.status = "accepted";

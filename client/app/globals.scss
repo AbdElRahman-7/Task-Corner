@@ -29,6 +29,16 @@ html.dark body {
   color: $dark-text-primary;
 }
 
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* ===========================
    Scrollbars
    =========================== */
@@ -39,6 +49,7 @@ html.dark body {
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  margin-block: 8px;
 }
 
 ::-webkit-scrollbar-thumb {

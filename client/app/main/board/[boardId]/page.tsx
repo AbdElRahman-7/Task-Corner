@@ -28,7 +28,7 @@ import { Task } from "@appTypes/index";
 import { toast } from "react-hot-toast";
 import InviteModal from "@components/modals/InviteModal";
 import BoardMembersSideBar from "@components/Board/BoardMembersSideBar";
-import { Users } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import type { AppDispatch } from "@store/index";
 
 export default function BoardPage({
@@ -52,6 +52,7 @@ export default function BoardPage({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"task" | "list" | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [inviteTaskId, setInviteTaskId] = useState<string | undefined>(undefined);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -204,34 +205,37 @@ export default function BoardPage({
       onDragEnd={handleDragEnd}
     >
       <div className="boardPage min-h-screen flex flex-col">
-        <div className="boardHeader flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-8 shrink-0">
-          <div className="flex flex-col gap-2">
-            <Link href="/" className="backLink inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-blue-500 transition-colors">
-              <span className="text-sm">←</span>
+        <div className="boardHeader">
+          <div className="boardHeader__title">
+            <Link href="/" className="backLink">
+              <span className="icon">←</span>
               Back to Dashboard
             </Link>
-            <h1 className="boardTitle text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight">{board.title}</h1>
+            <h1 className="boardTitle">{board.title}</h1>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="boardActions">
             <button
               onClick={() => setIsMembersOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-800 text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all active:scale-95"
+              className="boardBtn boardBtn--secondary"
               title="Board Members"
             >
               <Users size={16} strokeWidth={2.5} />
               <span>Members</span>
-              <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-md text-[10px]">
+              <span className="badge">
                 {board.members.length + 1}
               </span>
             </button>
-
             {isEditor && (
               <button
-                onClick={() => setIsInviteOpen(true)}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                onClick={() => {
+                  setInviteTaskId(undefined);
+                  setIsInviteOpen(true);
+                }}
+                className="boardBtn boardBtn--primary"
               >
-                + Invite
+                <UserPlus size={16} />
+                <span>Invite</span>
               </button>
             )}
           </div>
@@ -290,13 +294,23 @@ export default function BoardPage({
               setSelectedTask(null);
               setSelectedListId(null);
             }}
+            onInvite={() => {
+              setInviteTaskId(selectedTask.id);
+              setIsInviteOpen(true);
+            }}
           />
         )}
 
         <InviteModal
           boardId={boardId as string}
+          taskId={inviteTaskId}
           isOpen={isInviteOpen}
-          onClose={() => setIsInviteOpen(false)}
+          initialTasks={Object.values(tasks).filter(t => board.listIds.includes(t.listId as any))}
+          initialLists={Object.values(lists).filter(l => l.boardId === boardId)}
+          onClose={() => {
+            setIsInviteOpen(false);
+            setInviteTaskId(undefined);
+          }}
         />
 
         <BoardMembersSideBar

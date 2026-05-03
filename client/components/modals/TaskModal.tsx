@@ -26,9 +26,9 @@ interface TaskModalProps {
   listId: string;
   isOpen: boolean;
   onClose: () => void;
+  onInvite?: () => void;
 }
-
-const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
+const TaskModal = ({ taskId, listId, isOpen, onClose, onInvite }: TaskModalProps) => {
   const dispatch = useDispatch();
   const tasks = useSelector((state: RootState) => state.boards.tasks);
   const task = tasks[taskId];
@@ -39,8 +39,6 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
   const [newCheckItem, setNewCheckItem] = useState("");
   const [newLabelTitle, setNewLabelTitle] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
-  const [newAssigneeUserId, setNewAssigneeUserId] = useState<string>("");
-  const [newAssigneeRole, setNewAssigneeRole] = useState<AssignmentRole>("viewer");
 
   const boardId = lists[listId]?.boardId;
   const board = useSelector((state: RootState) => state.boards.boards[boardId || ""]);
@@ -55,6 +53,15 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
     toast.success("Changes saved successfully!");
     handleClose();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -76,16 +83,6 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
   const getUserLabel = (u: string | { _id: string; username: string; email: string } | undefined) =>
     typeof u === "string" ? u : u?.username || u?.email || "Unknown";
 
-  const boardUsers = (() => {
-    const members = board?.members ?? [];
-    return members
-      .map((m: any) => ({
-        id: getUserId(m.user) || "",
-        label: getUserLabel(m.user),
-        email: typeof m.user === "string" ? "" : m.user?.email,
-      }))
-      .filter((u: any) => Boolean(u.id));
-  })();
 
   const assignments: TaskAssignment[] = task.assignments ?? [];
 
@@ -93,18 +90,6 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
     handleUpdate({ assignments: next });
   };
 
-  const handleAddAssignment = () => {
-    if (!newAssigneeUserId) return;
-    const exists = assignments.some((a) => getUserId(a.user) === newAssigneeUserId);
-    if (exists) return;
-    const next: TaskAssignment[] = [
-      ...assignments,
-      { user: newAssigneeUserId, role: newAssigneeRole, permissions: {} },
-    ];
-    updateAssignments(next);
-    setNewAssigneeUserId("");
-    setNewAssigneeRole("viewer");
-  };
 
   const handleRemoveAssignment = (userId: string) => {
     updateAssignments(assignments.filter((a) => getUserId(a.user) !== userId));
@@ -214,8 +199,8 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
           </p>
         </div>
 
-        <div className="taskContent">
-          <div className="mainSection">
+        <div className="taskModal__content">
+          <div className="taskModal__main">
             <div className="formGroup">
               <div className="sectionHeader">
                 <AlignLeft size={18} />
@@ -299,7 +284,7 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
             </div>
           </div>
 
-          <div className="sidebar">
+          <div className="taskModal__sidebar">
             <div className="sidebarSection">
               <div className="sidebarSectionHeader">
                 <Tag size={14} />
@@ -367,45 +352,22 @@ const TaskModal = ({ taskId, listId, isOpen, onClose }: TaskModalProps) => {
             </div>
 
             <div className="sidebarSection">
-              <div className="sidebarSectionHeader">
-                <User size={14} />
-                <span>Assignments</span>
+              <div className="flex justify-between items-center mb-2">
+                <div className="sidebarSectionHeader !mb-0">
+                  <User size={14} />
+                  <span>Assignments</span>
+                </div>
+                {onInvite && isEditor && (
+                  <button 
+                    onClick={onInvite}
+                    className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    + Invite New
+                  </button>
+                )}
               </div>
 
               <div className="assignments">
-                <div className="assignments__addRow">
-                  <select
-                    className="formInput"
-                    value={newAssigneeUserId}
-                    onChange={(e) => setNewAssigneeUserId(e.target.value)}
-                    disabled={!isEditor}
-                  >
-                    <option value="">Select user…</option>
-                    {boardUsers.map((u) => (
-                      <option key={u.id} value={u.id} disabled={assignments.some((a) => getUserId(a.user) === u.id)}>
-                        {u.label}{u.email ? ` (${u.email})` : ""}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    className="formInput"
-                    value={newAssigneeRole}
-                    onChange={(e) => setNewAssigneeRole(e.target.value as AssignmentRole)}
-                    disabled={!isEditor || !newAssigneeUserId}
-                  >
-                    <option value="viewer">Viewer</option>
-                    <option value="commenter">Commenter</option>
-                    <option value="editor">Editor</option>
-                  </select>
-
-                  {isEditor && (
-                    <button type="button" className="assignments__addBtn" onClick={handleAddAssignment} disabled={!newAssigneeUserId}>
-                      <Plus size={14} />
-                      Add
-                    </button>
-                  )}
-                </div>
 
                 {assignments.length === 0 ? (
                   <div className="assignments__empty">No one assigned yet.</div>
