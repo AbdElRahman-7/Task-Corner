@@ -27,7 +27,7 @@ const Header = () => {
     toast.success("Logged out successfully");
   };
 
-  const isAuthPage = pathname?.includes("/auth/") || pathname === "/login" || pathname === "/signup";
+  const isAuthPage = pathname?.includes("/auth/") || pathname === "/login" || pathname === "/signup" || pathname?.includes("/invite/");
 
   return (
     <header className="header px-4 md:px-8">
@@ -65,7 +65,7 @@ const Header = () => {
         
         <ThemeToggle />
         
-        {mounted && token && (
+        {mounted && token ? (
           <button 
             onClick={handleLogout} 
             className="logoutBtn flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl font-bold transition-all active:scale-95" 
@@ -74,6 +74,15 @@ const Header = () => {
             <LogOut size={18} strokeWidth={2.5} />
             <span className="hidden md:inline">Logout</span>
           </button>
+        ) : (
+          mounted && isAuthPage && pathname?.includes("/invite/") && (
+            <Link 
+              href="/main/auth/login"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-black text-xs hover:bg-brand-secondary transition-all active:scale-95 shadow-lg shadow-brand-primary/20"
+            >
+              Sign In
+            </Link>
+          )
         )}
       </div>
     </header>

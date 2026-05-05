@@ -5,6 +5,7 @@ const Invite = require("../models/invite.model");
 const Board = require("../models/board.model");
 const Workspace = require("../models/workspace.model");
 const { protect } = require("../middleware/auth.middleware");
+const sendEmail = require("../utils/email");
 
 const router = express.Router();
 
@@ -62,12 +63,35 @@ router.post("/", protect, async (req, res) => {
       role: role || "viewer",
     });
 
-    const link = `${process.env.CLIENT_URL}/invite/${token}`;
+    const origin = req.get("origin") || (process.env.CLIENT_URL || "").split(",")[0].trim();
+    const link = `${origin}/main/invite/${token}`;
 
     console.log(`Invite created for ${email}: ${link}`);
 
+    // Send email
+    try {
+      await sendEmail({
+        email,
+        subject: `You've been invited to ${bId ? "a Board" : "a Workspace"} on TaskCorner`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <h2 style="color: #4f46e5;">You're Invited!</h2>
+            <p>You have been invited to collaborate on TaskCorner.</p>
+            <div style="margin: 30px 0;">
+              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Accept Invitation</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #4f46e5; font-size: 12px;">${link}</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error("Email Sending Error:", emailErr);
+      // We don't fail the request if email fails, as the link is still generated
+    }
+
     res.status(201).json({ 
-      message: "Invite link generated successfully", 
+      message: "Invite link generated successfully and email sent", 
       link 
     });
   } catch (error) {

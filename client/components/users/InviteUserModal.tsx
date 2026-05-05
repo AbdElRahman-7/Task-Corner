@@ -70,8 +70,18 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
         body: JSON.stringify({ name: name.trim(), email: email.trim() }),
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.message);
       setLink(data.link);
+      
+      // Celebrate!
+      if (typeof window !== 'undefined' && (window as any).confetti) {
+        (window as any).confetti({
+          particleCount: 100,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ['#7c3aed', '#10b981']
+        });
+      }
+
       toast.success("Invite link generated!");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to send invite");
@@ -128,6 +138,8 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     setSelectedBoardId("");
     setPassword("");
     setShowPassword(false);
+    setLoading(false);
+    setCreating(false);
     onClose();
   };
 
@@ -193,61 +205,65 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
             </div>
           </div>
 
-          <div className="formGroup !mb-0">
-            <label className="formLabel">Account Password</label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-primary opacity-50">
-                <Lock size={18} />
-              </div>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                placeholder="Minimum 6 characters"
-                className="formInput !pl-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="formGroup !mb-0">
-              <label className="formLabel">Assign to Board</label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-primary opacity-50">
-                  <Globe size={18} />
+          {!link && (
+            <>
+              <div className="formGroup !mb-0">
+                <label className="formLabel">Account Password (Optional for Direct Create)</label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-primary opacity-50">
+                    <Lock size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                    placeholder="Minimum 6 characters"
+                    className="formInput !pl-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                <select
-                  value={selectedBoardId}
-                  onChange={(e) => setSelectedBoardId(e.target.value)}
-                  className="formSelect !mt-0 !pl-10"
-                >
-                  <option value="">No board (Independent)</option>
-                  {boards.map(b => (
-                    <option key={b.id || (b as any)._id} value={b.id || (b as any)._id}>{b.title}</option>
-                  ))}
-                </select>
               </div>
-            </div>
-            <div className="formGroup !mb-0">
-              <label className="formLabel">Permission Level</label>
-              <select
-                disabled={!selectedBoardId}
-                value={role}
-                onChange={(e) => setRole(e.target.value as any)}
-                className="formSelect !mt-0"
-              >
-                <option value="viewer">VIEWER</option>
-                <option value="editor">EDITOR</option>
-              </select>
-            </div>
-          </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="formGroup !mb-0">
+                  <label className="formLabel">Assign to Board</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-primary opacity-50">
+                      <Globe size={18} />
+                    </div>
+                    <select
+                      value={selectedBoardId}
+                      onChange={(e) => setSelectedBoardId(e.target.value)}
+                      className="formSelect !mt-0 !pl-10"
+                    >
+                      <option value="">No board (Independent)</option>
+                      {boards.map(b => (
+                        <option key={b.id || (b as any)._id} value={b.id || (b as any)._id}>{b.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="formGroup !mb-0">
+                  <label className="formLabel">Permission Level</label>
+                  <select
+                    disabled={!selectedBoardId}
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as any)}
+                    className="formSelect !mt-0"
+                  >
+                    <option value="viewer">VIEWER</option>
+                    <option value="editor">EDITOR</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
           {error && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold animate-shake">
@@ -279,30 +295,41 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
         </div>
 
         <div className="modalActions !mt-10 pt-6 border-t border-gray-100 dark:border-white/5">
-          <button
-            onClick={handleInvite}
-            disabled={loading || creating || !email.trim() || !name.trim()}
-            className="btnSecondary !py-3.5 !px-8 !rounded-2xl !text-sm !font-bold hover:!bg-gray-100 dark:hover:!bg-white/10 transition-all"
-          >
-            {loading ? "Generating..." : "Generate Link"}
-          </button>
-          <button
-            onClick={handleCreateDirect}
-            disabled={creating || loading || !email.trim() || !name.trim()}
-            className="btnPrimary !py-3.5 !px-10 !rounded-2xl !text-sm !font-black !bg-violet-600 shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          >
-            {creating ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Creating...</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Plus size={18} />
-                <span>Create Account</span>
-              </div>
-            )}
-          </button>
+          {!link ? (
+            <>
+              <button
+                onClick={handleInvite}
+                disabled={loading || creating || !email.trim() || !name.trim()}
+                className="btnSecondary !py-3.5 !px-8 !rounded-2xl !text-sm !font-bold hover:!bg-gray-100 dark:hover:!bg-white/10 transition-all"
+              >
+                {loading ? "Generating..." : "Generate Invite Link"}
+              </button>
+              <button
+                onClick={handleCreateDirect}
+                disabled={creating || loading || !email.trim() || !name.trim()}
+                className="btnPrimary !py-3.5 !px-10 !rounded-2xl !text-sm !font-black !bg-violet-600 shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+              >
+                {creating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Creating...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Plus size={18} />
+                    <span>Create Direct Account</span>
+                  </div>
+                )}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={resetAndClose}
+              className="btnPrimary !w-full !py-4 !rounded-2xl !text-sm !font-black !bg-violet-600"
+            >
+              Done
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { loginStart, loginSuccess, loginFailure } from "@store/authSlice";
 import { RootState } from "@store/index";
 import Link from "next/link";
@@ -12,11 +12,13 @@ import { Mail, Lock, User, ArrowRight } from "lucide-react";
 
 export default function SignupPage() {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [password, setPassword] = useState("");
   const { loading } = useSelector((state: RootState) => state.auth);
+  const redirect = searchParams.get("redirect") || "/";
 
   const handleSignup = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,7 +38,7 @@ export default function SignupPage() {
       const { token, ...userData } = data;
       dispatch(loginSuccess({ user: userData, token }));
       toast.success("Account created successfully!");
-      router.push("/");
+      router.push(redirect);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Signup failed";
       dispatch(loginFailure(message));
