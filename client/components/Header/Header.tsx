@@ -30,7 +30,8 @@ const Header = () => {
   const isInvitePage = pathname?.includes("/invite/");
   const isAuthPage = pathname?.includes("/auth/") || pathname === "/login" || pathname === "/signup" || isInvitePage;
 
-  if (mounted && isInvitePage) return null;
+  if (!mounted) return null;
+  if (isInvitePage) return null;
 
   return (
     <header className="header px-4 md:px-8">
