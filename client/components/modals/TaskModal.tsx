@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Task, TaskAssignment, AssignmentRole, TaskAssignmentPermissions } from "@appTypes/index";
-import { updateTask, deleteTask } from "@store/boardSlice";
-import { RootState } from "@store/index";
+import { updateTask, deleteTask, updateTaskDB } from "@store/boardSlice";
+import { RootState, AppDispatch } from "@store/index";
 import {
   X,
   AlignLeft,
@@ -15,6 +15,7 @@ import {
   Save,
   User,
   Clock,
+  Globe,
 } from "lucide-react";
 
 import CustomSelect from "@components/Filters/CustomSelect";
@@ -29,7 +30,7 @@ interface TaskModalProps {
   onInvite?: () => void;
 }
 const TaskModal = ({ taskId, listId, isOpen, onClose, onInvite }: TaskModalProps) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const tasks = useSelector((state: RootState) => state.boards.tasks);
   const task = tasks[taskId];
   const lists = useSelector((state: RootState) => state.boards.lists);
@@ -49,9 +50,16 @@ const TaskModal = ({ taskId, listId, isOpen, onClose, onInvite }: TaskModalProps
     onClose();
   }, [onClose]);
 
-  const handleSaveChanges = () => {
-    toast.success("Changes saved successfully!");
-    handleClose();
+  const handleSaveChanges = async () => {
+    try {
+      if (isEditor) {
+        await dispatch(updateTaskDB({ id: task.id, updates: task })).unwrap();
+      }
+      toast.success("Changes saved successfully!");
+      handleClose();
+    } catch (error) {
+      toast.error("Failed to save changes");
+    }
   };
 
   useEffect(() => {
@@ -76,12 +84,34 @@ const TaskModal = ({ taskId, listId, isOpen, onClose, onInvite }: TaskModalProps
   const handleUpdate = (updates: Partial<Task>) => {
     if (!isEditor) return;
     dispatch(updateTask({ taskId: task.id, updates, listId }));
+    // Persist immediately for important fields like assignments
+    if (updates.assignments || updates.labels || updates.checklist || updates.priority || updates.dueDate || updates.autoDone) {
+      dispatch(updateTaskDB({ id: task.id, updates }));
+    }
   };
 
-  const getUserId = (u: string | { _id: string; username: string; email: string } | undefined) =>
-    typeof u === "string" ? u : u?._id;
-  const getUserLabel = (u: string | { _id: string; username: string; email: string } | undefined) =>
-    typeof u === "string" ? u : u?.username || u?.email || "Unknown";
+  const getUserId = (u: any) =>
+    typeof u === "string" ? u : u?._id || u?.id;
+
+  const getUserLabel = (u: any) => {
+    if (typeof u === "object" && u !== null && (u.username || u.email)) {
+      return u.username || u.email;
+    }
+    const userId = typeof u === "string" ? u : u?._id || u?.id;
+    if (!userId) return "Member";
+    
+    // Try to find in board members
+    const boardMember = board?.members?.find(m => {
+      const mId = typeof m.user === 'string' ? m.user : m.user?._id;
+      return mId === userId;
+    });
+
+    if (boardMember && typeof boardMember.user === 'object' && boardMember.user !== null) {
+      return boardMember.user.username || boardMember.user.email || "Member";
+    }
+
+    return "Member";
+  };
 
 
   const assignments: TaskAssignment[] = task.assignments ?? [];
@@ -368,6 +398,39 @@ const TaskModal = ({ taskId, listId, isOpen, onClose, onInvite }: TaskModalProps
               </div>
 
               <div className="assignments">
+                {isEditor && (
+                  <div className="assignments__addRow mb-3">
+                    <select
+                      className="formSelect !mt-0 !h-[42px] !py-0 !text-xs"
+                      onChange={(e) => {
+                        const userId = e.target.value;
+                        if (!userId) return;
+                        const member = board?.members?.find(m => (typeof m.user === 'string' ? m.user : m.user?._id) === userId);
+                        if (member) {
+                          const userData = typeof member.user === 'string' ? { _id: member.user, username: 'Member', email: '' } : member.user;
+                          updateAssignments([...assignments, {
+                            user: userData,
+                            role: "viewer"
+                          }]);
+                        }
+                        e.target.value = "";
+                      }}
+                    >
+                      <option value="">Assign a member...</option>
+                      {board?.members?.filter(m => {
+                        const mId = typeof m.user === 'string' ? m.user : m.user?._id;
+                        return !assignments.some(a => getUserId(a.user) === mId) && mId !== currentUser?._id;
+                      }).map(m => {
+                        const u = typeof m.user === 'string' ? { _id: m.user, username: 'Member' } : m.user;
+                        return (
+                          <option key={u._id} value={u._id}>
+                            {u.username}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
 
                 {assignments.length === 0 ? (
                   <div className="assignments__empty">No one assigned yet.</div>

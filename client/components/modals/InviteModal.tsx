@@ -14,6 +14,7 @@ interface InviteModalProps {
   taskId?: string; // Optional: If we're inviting specifically to a task
   initialTasks?: any[]; // Pre-loaded tasks from parent
   initialLists?: any[]; // Pre-loaded lists from parent
+  onSuccess?: () => void; // Callback after successful invite
 }
 
 export default function InviteModal({
@@ -23,7 +24,8 @@ export default function InviteModal({
   workspaceId,
   taskId,
   initialTasks,
-  initialLists
+  initialLists,
+  onSuccess
 }: InviteModalProps) {
   const [users, setUsers] = useState<any[]>([]);
   const [boards, setBoards] = useState<any[]>([]);
@@ -47,6 +49,7 @@ export default function InviteModal({
   const [manualEmails, setManualEmails] = useState<string[]>([]);
 
   const token = useSelector((state: RootState) => state.auth.token);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   
   const [selectedBoardId, setSelectedBoardId] = useState(boardId || "");
   const [selectedListId, setSelectedListId] = useState("");
@@ -149,10 +152,11 @@ export default function InviteModal({
 
   const filteredUsers = useMemo(() =>
     users.filter(u =>
-      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      ((u._id || u.id) !== currentUser?._id) &&
+      (u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       u.email.toLowerCase().includes(searchTerm.toLowerCase()))
     ),
-    [users, searchTerm]);
+    [users, searchTerm, currentUser]);
 
   const toggleUserSelection = (userId: string) => {
     setUsers(prev => prev.map(u =>
@@ -161,11 +165,13 @@ export default function InviteModal({
   };
 
   const selectAllFiltered = () => {
-    const allSelected = filteredUsers.every(u => u.selected);
+    const allSelected = filteredUsers.every(u => u.selected || (u._id || u.id) === currentUser?._id);
     const filteredIds = new Set(filteredUsers.map(u => u._id || u.id));
-    setUsers(prev => prev.map(u =>
-      filteredIds.has(u._id || u.id) ? { ...u, selected: !allSelected } : u
-    ));
+    setUsers(prev => prev.map(u => {
+      const userId = u._id || u.id;
+      if (userId === currentUser?._id) return u;
+      return filteredIds.has(userId) ? { ...u, selected: !allSelected } : u;
+    }));
   };
 
   const updateUserRole = (userId: string, role: "viewer" | "editor") => {
@@ -182,6 +188,10 @@ export default function InviteModal({
     }
     if (manualEmails.includes(email) || users.some(u => u.email.toLowerCase() === email)) {
       toast.error("User already in the list");
+      return;
+    }
+    if (email === currentUser?.email?.toLowerCase()) {
+      toast.error("You are the owner and already have access");
       return;
     }
     setManualEmails(prev => [...prev, email]);
@@ -243,6 +253,7 @@ export default function InviteModal({
       ));
 
       toast.success(`Successfully sent ${payloads.length} invite${payloads.length > 1 ? 's' : ''}!`);
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
       toast.error(error.message || "Failed to send some invites");
@@ -314,7 +325,7 @@ export default function InviteModal({
                         <input
                           type="checkbox"
                           className="checkbox"
-                          checked={filteredUsers.length > 0 && filteredUsers.every(u => u.selected)}
+                          checked={filteredUsers.length > 0 && filteredUsers.every(u => u.selected || (u._id || u.id) === currentUser?._id)}
                           onChange={selectAllFiltered}
                         />
                       </th>
@@ -327,14 +338,18 @@ export default function InviteModal({
                     {filteredUsers.map(user => (
                       <tr 
                         key={user._id || user.id} 
-                        className={user.selected ? "tr--selected" : ""}
-                        onClick={() => toggleUserSelection(user._id || user.id)}
-                        style={{ cursor: 'pointer' }}
+                        className={`${user.selected ? "tr--selected" : ""} ${(user._id || user.id) === currentUser?._id ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                        onClick={() => {
+                          const userId = user._id || user.id;
+                          if (userId === currentUser?._id) return;
+                          toggleUserSelection(userId);
+                        }}
                       >
                         <td className="text-center" onClick={e => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             className="checkbox"
+                            disabled={(user._id || user.id) === currentUser?._id}
                             checked={user.selected}
                             onChange={() => toggleUserSelection(user._id || user.id)}
                           />

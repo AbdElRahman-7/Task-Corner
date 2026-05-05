@@ -4,6 +4,8 @@ import { BoardRole, UserRow } from "@appTypes/index";
 import Avatar from "./Avatar";
 import RoleToggle from "./RoleToggle";
 import { API, authHeaders } from "./userConfig";
+import { useSelector } from "react-redux";
+import { RootState } from "@store/index";
 
 interface UserDetailPanelProps {
   user: UserRow;
@@ -18,6 +20,7 @@ export default function UserDetailPanel({
   onEdit,
   onDelete,
 }: UserDetailPanelProps) {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const [boards, setBoards] = useState<BoardRole[]>([]);
   const [loadingBoards, setLoadingBoards] = useState(true);
   const [boardsError, setBoardsError] = useState("");
@@ -179,7 +182,7 @@ export default function UserDetailPanel({
 
                   <RoleToggle
                     role={b.role}
-                    disabled={togglingId === b.boardId}
+                    disabled={togglingId === b.boardId || user._id === currentUser?._id}
                     onChange={(r) => handleRoleChange(b.boardId, r)}
                   />
                 </div>

@@ -24,6 +24,10 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
   const isOwner = (ownerData?._id || ownerData?.id) === currentUser?._id;
 
   const handleUpdateRole = async (userId: string, currentRole: string) => {
+    if (userId === (ownerData?._id || ownerData?.id)) {
+      toast.error("The owner's role cannot be changed");
+      return;
+    }
     const newRole = currentRole === "viewer" ? "editor" : "viewer";
     try {
       await dispatch(updateMemberRoleDB({ boardId, userId, role: newRole })).unwrap();
@@ -34,6 +38,10 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
   };
 
   const handleRemoveMember = async (userId: string) => {
+    if (userId === (ownerData?._id || ownerData?.id)) {
+      toast.error("The owner cannot be removed from the board");
+      return;
+    }
     if (!window.confirm("Are you sure you want to remove this member?")) return;
     try {
       await dispatch(removeMemberDB({ boardId, userId })).unwrap();
@@ -61,7 +69,7 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
         <div className="memberSidebar__header">
           <div className="memberSidebar__title">
             <h2>Board Members</h2>
-            <span>{board.members.length + 1} Active Members</span>
+            <span>Active Members</span>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-xl transition-all">
             <X size={24} strokeWidth={2.5} />
@@ -91,7 +99,11 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
           {/* Members Section */}
           <div className="memberSidebar__section">
             <div className="memberSidebar__sectionTitle">Team Members</div>
-            {board.members.map((member: any, index: number) => {
+            {board.members.filter((m: any) => {
+              const user = m.user;
+              const userId = typeof user === 'string' ? user : (user?._id || user?.id);
+              return userId !== currentUser?._id;
+            }).map((member: any, index: number) => {
               const user = member.user;
               const userData = typeof user === 'string' 
                 ? { username: 'User', email: '', _id: user } 
@@ -119,15 +131,17 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
                     <div className="memberItem__actions">
                       <button 
                          onClick={() => handleUpdateRole(userId, member.role)}
-                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-500"
-                         title="Change Role"
+                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                         title={userId === (ownerData?._id || ownerData?.id) ? "The owner's role cannot be changed" : "Change Role"}
+                         disabled={userId === (ownerData?._id || ownerData?.id)}
                       >
                         <Shield size={16} />
                       </button>
                       <button 
                          onClick={() => handleRemoveMember(userId)}
-                         className="p-2 rounded-lg hover:bg-red-50 text-red-500 dark:hover:bg-red-900/20"
-                         title="Remove Member"
+                         className="p-2 rounded-lg hover:bg-red-50 text-red-500 dark:hover:bg-red-900/20 disabled:opacity-30 disabled:cursor-not-allowed"
+                         title={userId === (ownerData?._id || ownerData?.id) ? "The owner cannot be removed" : "Remove Member"}
+                         disabled={userId === (ownerData?._id || ownerData?.id)}
                       >
                          <UserMinus size={16} />
                       </button>
@@ -137,7 +151,7 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
               );
             })}
             
-            {board.members.length === 0 && invites.length === 0 && (
+            {board.members.length === 0 && invites.filter((inv: any) => inv.email !== currentUser?.email).length === 0 && (
               <div className="text-center py-8 opacity-50 italic text-sm">
                 No team members yet.
               </div>
@@ -145,10 +159,10 @@ export default function BoardMembersSideBar({ boardId, isOpen, onClose }: BoardM
           </div>
 
           {/* Invites Section */}
-          {invites.length > 0 && (
+          {invites.filter((inv: any) => inv.email !== currentUser?.email).length > 0 && (
             <div className="memberSidebar__section">
               <div className="memberSidebar__sectionTitle">Pending Invitations</div>
-              {invites.map((invite: any, index: number) => (
+              {invites.filter((inv: any) => inv.email !== currentUser?.email).map((invite: any, index: number) => (
                 <div key={invite._id || `invite-${index}`} className="memberItem" style={{ opacity: 0.7 }}>
                   <div className="memberAvatar bg-amber-100 text-amber-600">
                     {getInitials(invite.name || invite.email)}

@@ -4,6 +4,8 @@ import "react-data-grid/lib/styles.css";
 import { LayoutDashboard, Clock, CheckSquare, Pencil, Trash2 } from "lucide-react";
 import { UserRow } from "@appTypes/index";
 import Avatar from "./Avatar";
+import { useSelector } from "react-redux";
+import { RootState } from "@store/index";
 
 interface UserGridProps {
   rows: UserRow[];
@@ -28,6 +30,7 @@ export default function UserGrid({
   onEdit,
   onDelete,
 }: UserGridProps) {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const columns: Column<UserRow, any>[] = useMemo(
     () => [
       {
@@ -140,30 +143,35 @@ export default function UserGrid({
         name: "",
         width: 90,
         renderCell({ row }) {
+          const isSelf = row._id === currentUser?._id;
           return (
             <div className="flex items-center justify-end gap-1 h-full pr-1">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(row);
-                }}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                title="Edit"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(row._id);
-                }}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {!isSelf && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(row);
+                    }}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(row._id);
+                    }}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
           );
         },

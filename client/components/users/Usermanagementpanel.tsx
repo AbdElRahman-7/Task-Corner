@@ -10,6 +10,8 @@ import EditUserModal from "./EditUserModal";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import BulkActions from "./BulkActions";
 import { useUsers } from "./useUsers";
+import { useSelector } from "react-redux";
+import { RootState } from "@store/index";
 
 export default function UserManagementPanel() {
   const {
@@ -28,6 +30,7 @@ export default function UserManagementPanel() {
     bulkDeleteUsers,
     updateUser,
   } = useUsers();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [selectedRows, setSelectedRows] = useState<ReadonlySet<string>>(new Set());
   const [editUser, setEditUser] = useState<UserRow | null>(null);
@@ -155,7 +158,10 @@ export default function UserManagementPanel() {
             sortColumns={sortColumns}
             onSortColumnsChange={setSortColumns}
             selectedRows={selectedRows}
-            onSelectedRowsChange={setSelectedRows}
+            onSelectedRowsChange={(newRows) => {
+              const filtered = new Set([...newRows].filter(id => id !== currentUser?._id));
+              setSelectedRows(filtered);
+            }}
             onViewDetail={setDetailUser}
             onEdit={(user) => {
               setEditUser(user);
