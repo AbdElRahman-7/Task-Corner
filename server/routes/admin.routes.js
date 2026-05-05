@@ -7,6 +7,7 @@ const Task = require("../models/task.model");
 const List = require("../models/list.model");
 const Invite = require("../models/invite.model");
 const { protect: authMiddleware, admin: adminMiddleware } = require("../middleware/auth.middleware");
+const sendEmail = require("../utils/email");
 
 // ─────────────────────────────────────────────────────────
 // GET /api/admin/users
@@ -131,8 +132,31 @@ router.post("/invite", authMiddleware, adminMiddleware, async (req, res) => {
     const token = crypto.randomBytes(32).toString("hex");
     await Invite.create({ email, token });
 
-    const link = `${process.env.CLIENT_URL}/invite/${token}`;
-    res.status(201).json({ success: true, link, message: "Invite sent successfully" });
+    const origin = req.get("origin") || (process.env.CLIENT_URL || "").split(",")[0].trim();
+    const link = `${origin}/main/invite/${token}`;
+    
+    // Send email
+    try {
+      await sendEmail({
+        email,
+        subject: `Invitation to join TaskCorner`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <h2 style="color: #4f46e5;">Welcome to TaskCorner</h2>
+            <p>You have been invited to join TaskCorner as a new user.</p>
+            <div style="margin: 30px 0;">
+              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Join Now</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #4f46e5; font-size: 12px;">${link}</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error("Email Sending Error:", emailErr);
+    }
+
+    res.status(201).json({ success: true, link, message: "Invite sent successfully and email delivered" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

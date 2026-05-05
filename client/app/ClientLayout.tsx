@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Script from "next/script";
 import { Provider } from "react-redux";
 import { store } from "@store";
 import { Toaster } from "react-hot-toast";
@@ -23,6 +24,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <Toaster
           position="bottom-right"
           containerStyle={{ zIndex: 99999 }}
+        />
+        <Script 
+          src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"
+          strategy="afterInteractive"
         />
         <Header />
         <main>{children}</main>

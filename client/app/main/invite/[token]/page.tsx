@@ -29,12 +29,18 @@ export default function InvitePage({
       .then((data) => {
         setInvite(data);
         setLoading(false);
+        
+        // If not authenticated, redirect to login after loading invite details
+        if (!authToken) {
+          const returnUrl = encodeURIComponent(`${window.location.pathname}?email=${data.email || ""}`);
+          router.push(`/main/auth/login?redirect=${returnUrl}&email=${encodeURIComponent(data.email || "")}`);
+        }
       })
       .catch((err) => {
         setError(err.message || "Invalid or expired invite.");
         setLoading(false);
       });
-  }, [token]);
+  }, [token, authToken, router]);
 
   const handleAccept = async () => {
     if (!token) {

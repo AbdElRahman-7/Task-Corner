@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { X, UserPlus, Search, CheckCircle, Globe, AlignLeft, CheckSquare, Mail, User } from "lucide-react";
+import { X, UserPlus, Search, CheckCircle, Globe, AlignLeft, CheckSquare, Mail, User, Copy } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@store/index";
 import { apiFetch } from "@utils/api";
@@ -44,6 +44,8 @@ export default function InviteModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sentLinks, setSentLinks] = useState<{ email: string, link: string }[]>([]);
+  const [showResults, setShowResults] = useState(false);
 
   const [manualEmail, setManualEmail] = useState("");
   const [manualEmails, setManualEmails] = useState<string[]>([]);
@@ -107,6 +109,8 @@ export default function InviteModal({
       setSearchTerm("");
       setManualEmail("");
       setManualEmails([]);
+      setSentLinks([]);
+      setShowResults(false);
       setUsers(prev => prev.map(u => ({ ...u, selected: false, role: "viewer" })));
     }
   }, [isOpen]);
@@ -243,23 +247,41 @@ export default function InviteModal({
         });
       });
 
-      await Promise.all(payloads.map(p =>
-        apiFetch("/invite", {
+      const results = await Promise.all(payloads.map(async (p) => {
+        const res = await apiFetch("/invite", {
           method: "POST",
           body: JSON.stringify(p),
           token,
           auth: true,
-        })
-      ));
+        });
+        return { email: p.email, link: res.link };
+      }));
 
-      toast.success(`Successfully sent ${payloads.length} invite${payloads.length > 1 ? 's' : ''}!`);
+      setSentLinks(results);
+      setShowResults(true);
+      
+      // Celebrate!
+      if (typeof window !== 'undefined' && (window as any).confetti) {
+        (window as any).confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#7c3aed', '#3b82f6', '#10b981']
+        });
+      }
+
+      toast.success(`Successfully generated ${payloads.length} invite${payloads.length > 1 ? 's' : ''}!`);
       if (onSuccess) onSuccess();
-      onClose();
     } catch (error: any) {
       toast.error(error.message || "Failed to send some invites");
     } finally {
       setSending(false);
     }
+  };
+
+  const handleCopyOne = (link: string) => {
+    navigator.clipboard.writeText(link);
+    toast.success("Link copied to clipboard!");
   };
 
   const selectedCount = users.filter(u => u.selected).length;
@@ -279,278 +301,319 @@ export default function InviteModal({
         </div>
 
         <div className="inviteContent">
-          {/* Left Panel: User Directory */}
-          <div className="inviteLeft">
-            <div className="inviteSearch">
-              <div className="inviteSearch__wrapper">
-                <Search className="icon" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search members by name or email..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
-                  <button 
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
+          {showResults ? (
+            <div className="w-full p-8 animate-fadeIn">
+              <div className="text-center mb-8">
+                <div className="bg-emerald-500/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-sm border border-emerald-500/20">
+                  <CheckCircle size={32} />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Invites Ready!</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Emails have been sent to recipients. You can also copy the links below.</p>
+              </div>
+
+              <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                {sentLinks.map((item, idx) => (
+                  <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm transition-all hover:border-brand-primary/30">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-gray-900 dark:text-white truncate">{item.email}</p>
+                      <p className="text-[10px] text-gray-400 font-medium truncate opacity-60">{item.link}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleCopyOne(item.link)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-bold hover:bg-brand-primary hover:text-white transition-all whitespace-nowrap ml-auto sm:ml-0"
+                    >
+                      <Copy size={14} />
+                      Copy Link
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="flex-1 overflow-auto">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center p-20 opacity-50 space-y-4">
-                  <div className="w-10 h-10 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin" />
-                  <p className="text-sm font-bold tracking-tight">Fetching team members...</p>
-                </div>
-              ) : filteredUsers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 animate-fadeIn">
-                  <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-full">
-                    <UserPlus className="text-gray-400" size={32} />
-                  </div>
-                  <div>
-                    <p className="text-gray-900 dark:text-white font-bold">No users found</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Try searching for something else or invite by email below.</p>
-                  </div>
-                </div>
-              ) : (
-                <table className="userSelectTable" style={{ minWidth: '600px' }}>
-                  <thead>
-                    <tr>
-                      <th className="w-12 text-center">
-                        <input
-                          type="checkbox"
-                          className="checkbox"
-                          checked={filteredUsers.length > 0 && filteredUsers.every(u => u.selected || (u._id || u.id) === currentUser?._id)}
-                          onChange={selectAllFiltered}
-                        />
-                      </th>
-                      <th>TEAM MEMBER</th>
-                      <th className="col-email">EMAIL</th>
-                      <th className="w-40">ROLE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map(user => (
-                      <tr 
-                        key={user._id || user.id} 
-                        className={`${user.selected ? "tr--selected" : ""} ${(user._id || user.id) === currentUser?._id ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-                        onClick={() => {
-                          const userId = user._id || user.id;
-                          if (userId === currentUser?._id) return;
-                          toggleUserSelection(userId);
-                        }}
+          ) : (
+            <>
+              {/* Left Panel: User Directory */}
+              <div className="inviteLeft">
+                <div className="inviteSearch">
+                  <div className="inviteSearch__wrapper">
+                    <Search className="icon" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Search members by name or email..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                      <button 
+                        onClick={() => setSearchTerm("")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary transition-colors"
                       >
-                        <td className="text-center" onClick={e => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            className="checkbox"
-                            disabled={(user._id || user.id) === currentUser?._id}
-                            checked={user.selected}
-                            onChange={() => toggleUserSelection(user._id || user.id)}
-                          />
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-3">
-                            <div className="userSelectTable__avatar">
-                              {user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="userSelectTable__name">{user.username}</div>
-                          </div>
-                        </td>
-                        <td className="col-email">
-                          <div className="userSelectTable__email">{user.email}</div>
-                        </td>
-                        <td onClick={e => e.stopPropagation()}>
-                          <select
-                            disabled={!user.selected}
-                            value={user.role}
-                            onChange={e => updateUserRole(user._id || user.id, e.target.value as any)}
-                            className="assignments__roleSelect"
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-auto">
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center p-20 opacity-50 space-y-4">
+                      <div className="w-10 h-10 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin" />
+                      <p className="text-sm font-bold tracking-tight">Fetching team members...</p>
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 animate-fadeIn">
+                      <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-full">
+                        <UserPlus className="text-gray-400" size={32} />
+                      </div>
+                      <div>
+                        <p className="text-gray-900 dark:text-white font-bold">No users found</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Try searching for something else or invite by email below.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <table className="userSelectTable" style={{ minWidth: '600px' }}>
+                      <thead>
+                        <tr>
+                          <th className="w-12 text-center">
+                            <input
+                              type="checkbox"
+                              className="checkbox"
+                              checked={filteredUsers.length > 0 && filteredUsers.every(u => u.selected || (u._id || u.id) === currentUser?._id)}
+                              onChange={selectAllFiltered}
+                            />
+                          </th>
+                          <th>TEAM MEMBER</th>
+                          <th className="col-email">EMAIL</th>
+                          <th className="w-40">ROLE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredUsers.map(user => (
+                          <tr 
+                            key={user._id || user.id} 
+                            className={`${user.selected ? "tr--selected" : ""} ${(user._id || user.id) === currentUser?._id ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                            onClick={() => {
+                              const userId = user._id || user.id;
+                              if (userId === currentUser?._id) return;
+                              toggleUserSelection(userId);
+                            }}
                           >
-                            <option value="viewer">VIEWER</option>
-                            <option value="editor">EDITOR</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          {/* Right Panel: Configuration & Summary */}
-          <div className="inviteRight">
-            <div className="space-y-6">
-              {/* Board selector — Hidden if already within a board context */}
-              {!boardId && (
-                <div className="mb-4">
-                  <label className="sidebarSectionHeader">
-                    <Globe size={14} />
-                    Target Board
-                  </label>
-                  <select
-                    value={selectedBoardId}
-                    onChange={e => {
-                      setSelectedBoardId(e.target.value);
-                      setSelectedListId("");
-                      setSelectedTaskId("");
-                    }}
-                    className="formSelect"
-                  >
-                    <option value="">Select a board...</option>
-                    {boards.map(board => (
-                      <option key={board._id || board.id} value={board._id || board.id}>
-                        {board.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* List selector — Only shown if a board is selected AND not within a task context */}
-              {(selectedBoardId || boardId) && !taskId && lists.length > 0 && (
-                <div className="mb-4">
-                  <label className="sidebarSectionHeader">
-                    <AlignLeft size={14} />
-                    Target List (Filter)
-                  </label>
-                  <select
-                    value={selectedListId}
-                    onChange={e => {
-                      setSelectedListId(e.target.value);
-                      setSelectedTaskId("");
-                    }}
-                    className="formSelect"
-                  >
-                    <option value="">All Lists</option>
-                    {lists.map(list => (
-                      <option key={list._id || list.id} value={list._id || list.id}>
-                        {list.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Task selector — Only shown if not within a task context */}
-              {(selectedBoardId || boardId) && !taskId && tasks.length > 0 && (
-                <div className="mb-4">
-                  <label className="sidebarSectionHeader">
-                    <CheckSquare size={14} />
-                    Target Task (Optional)
-                  </label>
-                  <select
-                    value={selectedTaskId}
-                    onChange={e => setSelectedTaskId(e.target.value)}
-                    className="formSelect"
-                  >
-                    <option value="">Select a task to assign...</option>
-                    {(() => {
-                      const filteredTasks = selectedListId 
-                        ? tasks.filter(t => (t.listId?._id || t.listId) === selectedListId)
-                        : tasks;
-
-                      const tasksByList: { [key: string]: any[] } = {};
-                      filteredTasks.forEach(t => {
-                        const listName = t.listName || "Tasks";
-                        if (!tasksByList[listName]) tasksByList[listName] = [];
-                        tasksByList[listName].push(t);
-                      });
-
-                      return Object.entries(tasksByList).map(([listName, listTasks]) => (
-                        <optgroup key={listName} label={listName}>
-                          {listTasks.map(task => (
-                            <option key={task._id || task.id} value={task._id || task.id}>
-                              {task.title}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ));
-                    })()}
-                  </select>
-                </div>
-              )}
-
-              <div className="inviteRight__grow">
-                <h3 className="sidebarSectionHeader">
-                  <CheckCircle size={14} />
-                  Invite Summary
-                </h3>
-                <div className="inviteSummaryCard mt-3">
-                  <div className="inviteSummaryCard__count">
-                    {totalCount}
-                  </div>
-                  <div className="inviteSummaryCard__label">Total Recipients</div>
-
-                  {totalCount > 0 && (
-                    <div className="mt-1 opacity-50 text-[0.6rem] font-bold uppercase">
-                      {selectedCount > 0 && <span>{selectedCount} from list</span>}
-                      {selectedCount > 0 && manualEmails.length > 0 && <span className="mx-1">•</span>}
-                      {manualEmails.length > 0 && <span>{manualEmails.length} via email</span>}
-                    </div>
-                  )}
-
-                  {selectedTaskId && totalCount > 0 && (
-                    <div className="mt-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 text-[10px] text-blue-600 dark:text-blue-400 font-medium border border-blue-100 dark:border-blue-800/30">
-                      Will be assigned to: <br/>
-                      <strong>{tasks.find(t => (t._id || t.id) === selectedTaskId)?.title || "Selected Task"}</strong>
-                    </div>
+                            <td className="text-center" onClick={e => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                className="checkbox"
+                                disabled={(user._id || user.id) === currentUser?._id}
+                                checked={user.selected}
+                                onChange={() => toggleUserSelection(user._id || user.id)}
+                              />
+                            </td>
+                            <td>
+                              <div className="flex items-center gap-3">
+                                <div className="userSelectTable__avatar">
+                                  {user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="userSelectTable__name">{user.username}</div>
+                              </div>
+                            </td>
+                            <td className="col-email">
+                              <div className="userSelectTable__email">{user.email}</div>
+                            </td>
+                            <td onClick={e => e.stopPropagation()}>
+                              <select
+                                disabled={!user.selected}
+                                value={user.role}
+                                onChange={e => updateUserRole(user._id || user.id, e.target.value as any)}
+                                className="assignments__roleSelect"
+                              >
+                                <option value="viewer">VIEWER</option>
+                                <option value="editor">EDITOR</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   )}
                 </div>
-
-                {manualEmails.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="sidebarSectionHeader">Manual Emails</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {manualEmails.map(email => (
-                        <div key={email} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-bold">
-                          <span className="truncate max-w-[120px]">{email}</span>
-                          <button onClick={() => removeManualEmail(email)} className="text-gray-400 hover:text-red-500">
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
+
+              {/* Right Panel: Configuration & Summary */}
+              <div className="inviteRight">
+                <div className="space-y-6">
+                  {/* Board selector — Hidden if already within a board context */}
+                  {!boardId && (
+                    <div className="mb-4">
+                      <label className="sidebarSectionHeader">
+                        <Globe size={14} />
+                        Target Board
+                      </label>
+                      <select
+                        value={selectedBoardId}
+                        onChange={e => {
+                          setSelectedBoardId(e.target.value);
+                          setSelectedListId("");
+                          setSelectedTaskId("");
+                        }}
+                        className="formSelect"
+                      >
+                        <option value="">Select a board...</option>
+                        {boards.map(board => (
+                          <option key={board._id || board.id} value={board._id || board.id}>
+                            {board.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* List selector — Only shown if a board is selected AND not within a task context */}
+                  {(selectedBoardId || boardId) && !taskId && lists.length > 0 && (
+                    <div className="mb-4">
+                      <label className="sidebarSectionHeader">
+                        <AlignLeft size={14} />
+                        Target List (Filter)
+                      </label>
+                      <select
+                        value={selectedListId}
+                        onChange={e => {
+                          setSelectedListId(e.target.value);
+                          setSelectedTaskId("");
+                        }}
+                        className="formSelect"
+                      >
+                        <option value="">All Lists</option>
+                        {lists.map(list => (
+                          <option key={list._id || list.id} value={list._id || list.id}>
+                            {list.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Task selector — Only shown if not within a task context */}
+                  {(selectedBoardId || boardId) && !taskId && tasks.length > 0 && (
+                    <div className="mb-4">
+                      <label className="sidebarSectionHeader">
+                        <CheckSquare size={14} />
+                        Target Task (Optional)
+                      </label>
+                      <select
+                        value={selectedTaskId}
+                        onChange={e => setSelectedTaskId(e.target.value)}
+                        className="formSelect"
+                      >
+                        <option value="">Select a task to assign...</option>
+                        {(() => {
+                          const filteredTasks = selectedListId 
+                            ? tasks.filter(t => (t.listId?._id || t.listId) === selectedListId)
+                            : tasks;
+
+                          const tasksByList: { [key: string]: any[] } = {};
+                          filteredTasks.forEach(t => {
+                            const listName = t.listName || "Tasks";
+                            if (!tasksByList[listName]) tasksByList[listName] = [];
+                            tasksByList[listName].push(t);
+                          });
+
+                          return Object.entries(tasksByList).map(([listName, listTasks]) => (
+                            <optgroup key={listName} label={listName}>
+                              {listTasks.map(task => (
+                                <option key={task._id || task.id} value={task._id || task.id}>
+                                  {task.title}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ));
+                        })()}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="inviteRight__grow">
+                    <h3 className="sidebarSectionHeader">
+                      <CheckCircle size={14} />
+                      Invite Summary
+                    </h3>
+                    <div className="inviteSummaryCard mt-3">
+                      <div className="inviteSummaryCard__count">
+                        {totalCount}
+                      </div>
+                      <div className="inviteSummaryCard__label">Total Recipients</div>
+
+                      {totalCount > 0 && (
+                        <div className="mt-1 opacity-50 text-[0.6rem] font-bold uppercase">
+                          {selectedCount > 0 && <span>{selectedCount} from list</span>}
+                          {selectedCount > 0 && manualEmails.length > 0 && <span className="mx-1">•</span>}
+                          {manualEmails.length > 0 && <span>{manualEmails.length} via email</span>}
+                        </div>
+                      )}
+
+                      {selectedTaskId && totalCount > 0 && (
+                        <div className="mt-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20 text-[10px] text-blue-600 dark:text-blue-400 font-medium border border-blue-100 dark:border-blue-800/30">
+                          Will be assigned to: <br/>
+                          <strong>{tasks.find(t => (t._id || t.id) === selectedTaskId)?.title || "Selected Task"}</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    {manualEmails.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="sidebarSectionHeader">Manual Emails</h3>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {manualEmails.map(email => (
+                            <div key={email} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[10px] font-bold">
+                              <span className="truncate max-w-[120px]">{email}</span>
+                              <button onClick={() => removeManualEmail(email)} className="text-gray-400 hover:text-red-500">
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="modalFooter modalFooter--invite">
-          <div className="inviteRight__actions">
+          {showResults ? (
             <button
-              onClick={handleBulkInvite}
-              disabled={
-                sending ||
-                totalCount === 0 ||
-                (!selectedBoardId && !workspaceId)
-              }
-              className="btnSave"
+              onClick={onClose}
+              className="btnPrimary !w-full !py-4 !rounded-2xl !text-sm !font-black !bg-violet-600"
             >
-              {sending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <UserPlus size={18} />
-                  Send {totalCount > 0 ? `${totalCount} ` : ""}Invite{totalCount !== 1 ? "s" : ""}
-                </>
-              )}
+              Close
             </button>
-            <button onClick={onClose} className="btnDanger btnDanger--full">
-              Cancel
-            </button>
-          </div>
+          ) : (
+            <div className="inviteRight__actions">
+              <button
+                onClick={handleBulkInvite}
+                disabled={
+                  sending ||
+                  totalCount === 0 ||
+                  (!selectedBoardId && !workspaceId)
+                }
+                className="btnSave"
+              >
+                {sending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={18} />
+                    Send {totalCount > 0 ? `${totalCount} ` : ""}Invite{totalCount !== 1 ? "s" : ""}
+                  </>
+                )}
+              </button>
+              <button onClick={onClose} className="btnDanger btnDanger--full">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
