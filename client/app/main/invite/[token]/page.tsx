@@ -29,18 +29,12 @@ export default function InvitePage({
       .then((data) => {
         setInvite(data);
         setLoading(false);
-        
-        // If not authenticated, redirect to login after loading invite details
-        if (!authToken) {
-          const returnUrl = encodeURIComponent(`${window.location.pathname}?email=${data.email || ""}`);
-          router.push(`/main/auth/login?redirect=${returnUrl}&email=${encodeURIComponent(data.email || "")}`);
-        }
       })
       .catch((err) => {
         setError(err.message || "Invalid or expired invite.");
         setLoading(false);
       });
-  }, [token, authToken, router]);
+  }, [token]);
 
   const handleAccept = async () => {
     if (!token) {
@@ -49,8 +43,8 @@ export default function InvitePage({
       return;
     }
     if (!authToken) {
-      toast.error("Please log in or sign up to accept this invitation.");
-      router.push("/main/auth/login");
+      const returnUrl = encodeURIComponent(`${window.location.pathname}`);
+      router.push(`/main/auth/login?redirect=${returnUrl}&email=${encodeURIComponent(invite?.email || "")}`);
       return;
     }
 
@@ -67,6 +61,11 @@ export default function InvitePage({
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to accept invite.");
     }
+  };
+
+  const handleAuthRedirect = (type: 'login' | 'signup') => {
+    const returnUrl = encodeURIComponent(`${window.location.pathname}`);
+    router.push(`/main/auth/${type}?redirect=${returnUrl}&email=${encodeURIComponent(invite?.email || "")}`);
   };
 
   if (!token) {
@@ -86,7 +85,10 @@ export default function InvitePage({
   if (loading) {
     return (
       <div className={styles.page}>
-        <p className={styles.loadingText}>Loading invitation...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-violet-600/20 border-t-violet-600 rounded-full animate-spin" />
+          <p className={styles.loadingText}>Verifying your invitation...</p>
+        </div>
       </div>
     );
   }
@@ -95,48 +97,80 @@ export default function InvitePage({
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <h2 className={styles.titleError}>Oops!</h2>
-          <p className={`${styles.muted} ${styles.mb2}`}>{error}</p>
+          <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mb-6 mx-auto">
+             <span className="text-4xl">⚠️</span>
+          </div>
+          <h2 className={styles.titleError}>Invitation Expired</h2>
+          <p className={`${styles.muted} ${styles.mb6}`}>This invitation link is either invalid or has expired. Please ask the administrator for a new one.</p>
           <button onClick={() => router.push('/')} className={styles.homeBtn}>
-            Go Home
+            Back to Dashboard
           </button>
         </div>
       </div>
     );
   }
 
+  const targetName = (invite?.boardId as any)?.title || "a Board";
   const inviteType = invite?.workspaceId ? "workspace" : "board";
 
   return (
     <div className={styles.page}>
-      <div className={`${styles.card} ${styles.cardLarge}`}>
-        <div className={styles.icon}>
-          💌
+      <div className={`${styles.card} ${styles.cardLarge} animate-fadeIn`}>
+        <div className="mb-8">
+           <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-[28px] shadow-2xl shadow-violet-500/20 flex items-center justify-center text-4xl mb-6 mx-auto transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+             💌
+           </div>
         </div>
+
         <h1 className={styles.title}>
-          {invite?.name ? `Hey ${invite.name}, you're invited!` : "You've been invited!"}
+          {invite?.name ? `Hey ${invite.name},` : "You're Invited!"}
+          <span className="block text-violet-600 mt-1">Join {targetName}</span>
         </h1>
+
         <p className={styles.description}>
-          You have been invited to collaborate on a {inviteType}.
+          You have been invited to collaborate on <strong>{targetName}</strong> as a <strong>{invite?.role || 'viewer'}</strong>.
           <br /><br />
-          Invitation intended for:<br />
+          <span className="opacity-60">Invitation for:</span><br />
           <strong className={styles.email}>{invite?.email}</strong>
         </p>
 
-        {!authToken && (
-          <div className={styles.hintBox}>
-            <p className={styles.hintText}>
-              To accept, please log in or create an account with the exact email address shown above.
-            </p>
+        {!authToken ? (
+          <div className="mt-8 space-y-4">
+            <div className={styles.hintBox}>
+              <p className={styles.hintText}>
+                To accept, please log in or create a new account with the email address above.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleAuthRedirect('login')}
+                className="btnSecondary !py-4 !rounded-2xl !text-sm !font-bold"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => handleAuthRedirect('signup')}
+                className="btnPrimary !py-4 !rounded-2xl !text-sm !font-black !bg-violet-600"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8">
+            <button
+              onClick={handleAccept}
+              className={styles.acceptBtn}
+            >
+              Accept Invitation & Join
+            </button>
           </div>
         )}
-
-        <button
-          onClick={handleAccept}
-          className={styles.acceptBtn}
-        >
-          {authToken ? "Accept Invitation" : "Log In to Accept"}
-        </button>
+        
+        <p className="mt-8 text-[11px] text-gray-400 font-medium uppercase tracking-widest">
+          Powered by TaskCorner
+        </p>
       </div>
     </div>
   );
