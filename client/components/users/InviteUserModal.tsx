@@ -144,26 +144,28 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
           <X size={20} />
         </button>
 
-        <div className="modalHeader">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-violet-600/10 p-2.5 rounded-xl text-violet-600">
-              <UserPlus size={24} />
+        <div className="modalHeader !mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="bg-violet-600/10 p-3 rounded-2xl text-violet-600 shadow-sm">
+              <UserPlus size={28} />
             </div>
-            <h2 className="modalTitle !mb-0">Add New User</h2>
+            <div>
+              <h2 className="modalTitle !mb-0 !text-2xl !tracking-tight">Add New User</h2>
+              <p className="modalSubtitle !text-sm !opacity-80">Create an account or generate an invitation link.</p>
+            </div>
           </div>
-          <p className="modalSubtitle">Create an account or generate an invitation link.</p>
         </div>
 
-        <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar" style={{ maxH: '60vh' }}>
+        <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '60vh' }}>
           {/* Avatar Preview */}
           {previewInitials && (
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-violet-600/5 border border-violet-600/10 animate-fadeIn">
-              <span className={`flex items-center justify-center w-12 h-12 rounded-xl text-lg font-bold shadow-lg ${previewColor.bg} ${previewColor.text}`}>
+            <div className="flex items-center gap-4 p-5 rounded-[24px] bg-violet-600/5 border border-violet-600/10 animate-fadeIn shadow-inner">
+              <span className={`flex items-center justify-center w-14 h-14 rounded-2xl text-xl font-black shadow-xl ${previewColor.bg} ${previewColor.text} border-2 border-white dark:border-gray-800`}>
                 {previewInitials}
               </span>
               <div>
-                <p className="text-sm font-bold text-gray-900 dark:text-white">{name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{email || "Enter an email address"}</p>
+                <p className="text-sm font-black text-gray-900 dark:text-white tracking-tight">{name}</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 opacity-60 tracking-wide">{email || "Enter an email address"}</p>
               </div>
             </div>
           )}
@@ -276,18 +278,18 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
           )}
         </div>
 
-        <div className="modalActions">
+        <div className="modalActions !mt-10 pt-6 border-t border-gray-100 dark:border-white/5">
           <button
             onClick={handleInvite}
             disabled={loading || creating || !email.trim() || !name.trim()}
-            className="btnSecondary"
+            className="btnSecondary !py-3.5 !px-8 !rounded-2xl !text-sm !font-bold hover:!bg-gray-100 dark:hover:!bg-white/10 transition-all"
           >
             {loading ? "Generating..." : "Generate Link"}
           </button>
           <button
             onClick={handleCreateDirect}
             disabled={creating || loading || !email.trim() || !name.trim()}
-            className="btnPrimary"
+            className="btnPrimary !py-3.5 !px-10 !rounded-2xl !text-sm !font-black !bg-violet-600 shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
             {creating ? (
               <div className="flex items-center gap-2">

@@ -222,9 +222,6 @@ export default function BoardPage({
             >
               <Users size={16} strokeWidth={2.5} />
               <span>Members</span>
-              <span className="badge">
-                {board.members.length + 1}
-              </span>
             </button>
             {isEditor && (
               <button
@@ -310,6 +307,9 @@ export default function BoardPage({
           onClose={() => {
             setIsInviteOpen(false);
             setInviteTaskId(undefined);
+          }}
+          onSuccess={() => {
+            dispatch(loadBoardData(boardId as string));
           }}
         />
 
