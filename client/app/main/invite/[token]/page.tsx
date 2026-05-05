@@ -20,7 +20,7 @@ export default function InvitePage({
   const authToken = authTokenFromRedux ?? loadState()?.auth?.token ?? null;
 
   const [loading, setLoading] = useState(true);
-  const [invite, setInvite] = useState<{ email?: string, name?: string, boardId?: string, workspaceId?: string } | null>(null);
+  const [invite, setInvite] = useState<{ email?: string, name?: string, boardId?: { title: string } | string, workspaceId?: string, role?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -163,7 +163,7 @@ export default function InvitePage({
               onClick={handleAccept}
               className={styles.acceptBtn}
             >
-              Accept Invitation & Join
+              Accept Invitation {"&"} Join
             </button>
           </div>
         )}
