@@ -14,8 +14,8 @@ const router = express.Router();
 // @access  Private
 router.post("/", protect, async (req, res) => {
   try {
-    const { email, boardId, workspaceId, taskId, role } = req.body;
-    console.log("Incoming Invite:", { email, boardId, workspaceId, taskId });
+    const { email, name, boardId, workspaceId, taskId, role } = req.body;
+    console.log("Incoming Invite:", { email, name, boardId, workspaceId, taskId });
 
     const bId = (boardId && boardId !== "undefined" && boardId !== "null") ? boardId : null;
     const wId = (workspaceId && workspaceId !== "undefined" && workspaceId !== "null") ? workspaceId : null;
@@ -46,9 +46,10 @@ router.post("/", protect, async (req, res) => {
 
     const existingInvite = await Invite.findOne(query);
     if (existingInvite) {
+      const origin = req.get("origin") || (process.env.CLIENT_URL || "").split(",")[0].trim();
       return res.json({ 
         message: "Invite already sent", 
-        link: `${process.env.CLIENT_URL}/invite/${existingInvite.token}` 
+        link: `${origin}/main/invite/${existingInvite.token}` 
       });
     }
 
@@ -56,6 +57,7 @@ router.post("/", protect, async (req, res) => {
 
     const invite = await Invite.create({
       email,
+      name,
       boardId: bId || undefined,  
       workspaceId: wId || undefined,
       taskId: tId || undefined,
@@ -74,20 +76,26 @@ router.post("/", protect, async (req, res) => {
         email,
         subject: `You've been invited to ${bId ? "a Board" : "a Workspace"} on TaskCorner`,
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="color: #4f46e5;">You're Invited!</h2>
-            <p>You have been invited to collaborate on TaskCorner.</p>
-            <div style="margin: 30px 0;">
-              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Accept Invitation</a>
+          <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="margin-bottom: 32px; text-align: center;">
+               <h1 style="color: #4f46e5; margin: 0; font-size: 28px; font-weight: 800;">TaskCorner</h1>
             </div>
-            <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="color: #4f46e5; font-size: 12px;">${link}</p>
+            <h2 style="color: #1e293b; font-size: 24px; font-weight: 700; margin-bottom: 16px;">Hey ${name || 'there'}!</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+              You've been invited to join <strong>TaskCorner</strong> and collaborate on ${bId ? 'a Board' : 'a Workspace'}. Organize your work, collaborate with your team, and stay productive.
+            </p>
+            <div style="margin: 40px 0; text-align: center;">
+              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 16px 32px; text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 16px; display: inline-block; transition: all 0.2s; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);">Accept Invitation</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #4f46e5; font-size: 12px; word-break: break-all; background: #f8fafc; padding: 12px; border-radius: 8px;">${link}</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 32px 0;" />
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">&copy; 2024 TaskCorner. All rights reserved.</p>
           </div>
         `
       });
     } catch (emailErr) {
       console.error("Email Sending Error:", emailErr);
-      // We don't fail the request if email fails, as the link is still generated
     }
 
     res.status(201).json({ 
@@ -105,7 +113,7 @@ router.post("/", protect, async (req, res) => {
 // @access  Public
 router.get("/:token", async (req, res) => {
   try {
-    const invite = await Invite.findOne({ token: req.params.token });
+    const invite = await Invite.findOne({ token: req.params.token }).populate("boardId", "title");
     if (!invite) {
       return res.status(404).json({ message: "Invalid invite" });
     };

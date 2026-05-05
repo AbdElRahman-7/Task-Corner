@@ -67,9 +67,19 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
       const res = await fetch(`${API}/admin/invite`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+        body: JSON.stringify({ 
+          name: name.trim(), 
+          email: email.trim(),
+          boardId: selectedBoardId || undefined,
+          role: role
+        }),
       });
       const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to generate invite");
+      }
+
       setLink(data.link);
       
       // Celebrate!
@@ -82,7 +92,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
         });
       }
 
-      toast.success("Invite link generated!");
+      toast.success("Invite sent via email and link generated!");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to send invite");
     } finally {

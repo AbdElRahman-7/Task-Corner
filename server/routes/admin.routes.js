@@ -108,7 +108,7 @@ router.post("/users", authMiddleware, adminMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 router.post("/invite", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, name, boardId, role } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, message: "Email is required" });
     }
@@ -119,18 +119,28 @@ router.post("/invite", authMiddleware, adminMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: "User with this email already exists" });
     }
 
-    // Check if invite already sent
-    const existingInvite = await Invite.findOne({ email, status: "pending" });
+    // Check if invite already sent for this specific target
+    const query = { email, status: "pending" };
+    if (boardId) query.boardId = boardId;
+
+    const existingInvite = await Invite.findOne(query);
     if (existingInvite) {
+      const origin = req.get("origin") || (process.env.CLIENT_URL || "").split(",")[0].trim();
       return res.json({
         success: true,
-        link: `${process.env.CLIENT_URL}/invite/${existingInvite.token}`,
+        link: `${origin}/main/invite/${existingInvite.token}`,
         message: "Invite already sent",
       });
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    await Invite.create({ email, token });
+    await Invite.create({ 
+      email, 
+      name, 
+      boardId: boardId || undefined, 
+      role: role || "viewer",
+      token 
+    });
 
     const origin = req.get("origin") || (process.env.CLIENT_URL || "").split(",")[0].trim();
     const link = `${origin}/main/invite/${token}`;
@@ -141,14 +151,21 @@ router.post("/invite", authMiddleware, adminMiddleware, async (req, res) => {
         email,
         subject: `Invitation to join TaskCorner`,
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="color: #4f46e5;">Welcome to TaskCorner</h2>
-            <p>You have been invited to join TaskCorner as a new user.</p>
-            <div style="margin: 30px 0;">
-              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Join Now</a>
+          <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="margin-bottom: 32px; text-align: center;">
+               <h1 style="color: #4f46e5; margin: 0; font-size: 28px; font-weight: 800;">TaskCorner</h1>
             </div>
-            <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="color: #4f46e5; font-size: 12px;">${link}</p>
+            <h2 style="color: #1e293b; font-size: 24px; font-weight: 700; margin-bottom: 16px;">Hey ${name || 'there'}!</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+              You've been invited to join <strong>TaskCorner</strong>. Organize your work, collaborate with your team, and stay productive with our smart Kanban boards.
+            </p>
+            <div style="margin: 40px 0; text-align: center;">
+              <a href="${link}" style="background-color: #4f46e5; color: white; padding: 16px 32px; text-decoration: none; border-radius: 14px; font-weight: 800; font-size: 16px; display: inline-block; transition: all 0.2s; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);">Accept Invitation</a>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #4f46e5; font-size: 12px; word-break: break-all; background: #f8fafc; padding: 12px; border-radius: 8px;">${link}</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 32px 0;" />
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">&copy; 2024 TaskCorner. All rights reserved.</p>
           </div>
         `
       });
