@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState, useCallback } from "react";
 import { X, LayoutDashboard, Pencil, Trash2 } from "lucide-react";
 import { BoardRole, UserRow } from "@appTypes/index";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loginStart, loginSuccess, loginFailure } from "@store/authSlice";
@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import { apiFetch } from "@utils/api";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 
-export default function SignupPage() {
+function SignupForm() {
   const [username, setUsername] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
@@ -121,5 +121,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import CustomSelect from "./CustomSelect";

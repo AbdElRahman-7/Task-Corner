@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Task, TaskAssignment, AssignmentRole, TaskAssignmentPermissions } from "@appTypes/index";

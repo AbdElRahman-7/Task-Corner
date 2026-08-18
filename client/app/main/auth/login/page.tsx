@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loginStart, loginSuccess, loginFailure } from "@store/authSlice";
@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import { apiFetch } from "@utils/api";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -101,5 +101,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

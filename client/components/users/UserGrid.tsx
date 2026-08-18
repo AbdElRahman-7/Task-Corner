@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo } from "react";
 import { DataGrid, type Column, type SortColumn } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
