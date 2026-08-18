@@ -1,4 +1,8 @@
 require("dotenv").config();
+const dns = require("dns");
+// Windows/local routers often refuse SRV lookups; Atlas mongodb+srv:// needs them.
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 const mongoose = require("mongoose");
 const app = require("./app");
 const User = require("./models/user.model");
