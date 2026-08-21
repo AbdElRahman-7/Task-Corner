@@ -1,0 +1,56 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: taskcorner-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - app-network
+
+  server:
+    build:
+      context: ./server
+    container_name: taskcorner-server
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: "5000"
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongodb:27017/taskcorner
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./client
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    container_name: taskcorner-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+volumes:
+  mongo_data:
+
+networks:
+  app-network:
+    driver: bridge
