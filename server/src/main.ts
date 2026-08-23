@@ -4,8 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import * as dns from 'dns';
+import { existsSync } from 'fs';
 
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+// Public DNS breaks Docker service discovery (hostname "mongodb").
+if (!existsSync('/.dockerenv')) {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+}
 
 dotenv.config();
 
